@@ -1,0 +1,12 @@
+{
+  "parent": "block/crafting_table",
+  "textures": {
+    "particle": "factory:block/factory_side",
+    "down": "block/iron_block",
+    "up": "factory:block/factory_top",
+    "north": "factory:block/factory_side",
+    "east": "factory:block/factory_side",
+    "south": "factory:block/factory_side",
+    "west": "factory:block/factory_side"
+  }
+}
