@@ -6,6 +6,7 @@ import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.LockableLootTileEntity;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.text.ITextComponent;
@@ -15,8 +16,8 @@ import se.puggan.factory.util.RegistryHandler;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-// implements ISidedInventory, IRecipeHolder, IRecipeHelperPopulator, ITickableTileEntity
-public class FactoryEntity extends LockableLootTileEntity {
+// implements ISidedInventory, IRecipeHolder, IRecipeHelperPopulator
+public class FactoryEntity extends LockableLootTileEntity implements ITickableTileEntity {
     NonNullList<ItemStack> content = NonNullList.withSize(9, ItemStack.EMPTY);
 
     public FactoryEntity() {
@@ -67,5 +68,10 @@ public class FactoryEntity extends LockableLootTileEntity {
     @Override
     public int getSizeInventory() {
         return 9;
+    }
+
+    @Override
+    public void tick() {
+
     }
 }

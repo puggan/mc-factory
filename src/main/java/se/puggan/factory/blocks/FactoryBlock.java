@@ -71,7 +71,7 @@ public class FactoryBlock extends ContainerBlock {
     public void tick(BlockState state, ServerWorld worldIn, BlockPos pos, Random rand) {
         TileEntity tileentity = worldIn.getTileEntity(pos);
         if (tileentity instanceof FactoryEntity) {
-            ((FactoryEntity)tileentity).Tick();
+            ((FactoryEntity)tileentity).tick();
         }
 
     }
