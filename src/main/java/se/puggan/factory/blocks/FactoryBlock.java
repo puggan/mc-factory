@@ -4,8 +4,10 @@ import net.minecraft.block.*;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.InventoryHelper;
+import net.minecraft.inventory.container.INamedContainerProvider;
 import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.StateContainer;
+import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
@@ -16,6 +18,8 @@ import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
+import se.puggan.factory.Factory;
+import se.puggan.factory.container.FactoryContainer;
 import se.puggan.factory.container.FactoryEntity;
 
 import javax.annotation.Nonnull;
@@ -24,14 +28,16 @@ import java.util.Random;
 
 public class FactoryBlock extends ContainerBlock {
     public static final ITextComponent menuTitle = new TranslationTextComponent("container.factory");
-    static final BooleanProperty emptyProperty = BooleanProperty.create("empty");
-    static final BooleanProperty enabledProperty = BooleanProperty.create("enabled");
+    public static final BooleanProperty loadedProperty = BooleanProperty.create("loaded");
+    public static final BooleanProperty enabledProperty = BlockStateProperties.ENABLED;
+    public static final BooleanProperty openProperty = BlockStateProperties.OPEN;
 
     public FactoryBlock() {
         super(Properties.from(Blocks.CRAFTING_TABLE));
         BlockState bs = getDefaultState();
-        bs = bs.with(emptyProperty, true);
+        bs = bs.with(loadedProperty, false);
         bs = bs.with(enabledProperty, false);
+        bs = bs.with(openProperty, false);
         setDefaultState(bs);
     }
 
@@ -49,7 +55,9 @@ public class FactoryBlock extends ContainerBlock {
             return ActionResultType.SUCCESS;
         }
 
-        player.openContainer(state.getContainer(worldIn, pos));
+        INamedContainerProvider container = state.getContainer(worldIn, pos);
+
+        player.openContainer(container);
         return ActionResultType.SUCCESS;
     }
 
@@ -60,6 +68,10 @@ public class FactoryBlock extends ContainerBlock {
         if (state.getBlock() != newState.getBlock()) {
             TileEntity tileentity = worldIn.getTileEntity(pos);
             if (tileentity instanceof IInventory) {
+                if(tileentity instanceof FactoryEntity) {
+                    // don't drop crafting exemple
+                    ((FactoryEntity)tileentity).removeStackFromSlot(9);
+                }
                 InventoryHelper.dropInventoryItems(worldIn, pos, (IInventory)tileentity);
                 worldIn.updateComparatorOutputLevel(pos, this);
             }
@@ -73,14 +85,12 @@ public class FactoryBlock extends ContainerBlock {
         if (tileentity instanceof FactoryEntity) {
             ((FactoryEntity)tileentity).tick();
         }
-
     }
 
     @Override
     protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
         super.fillStateContainer(builder);
-        builder.add(emptyProperty);
-        builder.add(enabledProperty);
+        builder.add(loadedProperty, enabledProperty, openProperty);
     }
 
     @Override
