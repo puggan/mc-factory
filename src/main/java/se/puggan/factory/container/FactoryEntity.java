@@ -3,6 +3,7 @@ package se.puggan.factory.container;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.inventory.IRecipeHelperPopulator;
 import net.minecraft.inventory.IRecipeHolder;
 import net.minecraft.inventory.ItemStackHelper;
@@ -26,6 +27,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.network.PacketDistributor;
 import se.puggan.factory.Factory;
 import se.puggan.factory.blocks.FactoryBlock;
+import se.puggan.factory.container.slot.IInventorySender;
 import se.puggan.factory.network.FactoryNetwork;
 import se.puggan.factory.util.RegistryHandler;
 
@@ -34,12 +36,14 @@ import javax.annotation.Nullable;
 import java.util.Optional;
 
 // implements ISidedInventory
-public class FactoryEntity extends LockableLootTileEntity implements ITickableTileEntity, IRecipeHolder, IRecipeHelperPopulator /*, IContainerListener*/ {
+public class FactoryEntity extends LockableLootTileEntity implements ITickableTileEntity, IRecipeHolder, IRecipeHelperPopulator, IInventorySender {
     public final int SIZE = 20;
     public boolean modeCrafting = false;
     private NonNullList<ItemStack> content = NonNullList.withSize(SIZE, ItemStack.EMPTY);
     private ICraftingRecipe recipt;
     private ResourceLocation reciptRL;
+    private int timer;
+    private boolean valid;
 
     public FactoryEntity() {
         super(RegistryHandler.FACTORY_ENTITY.get());
@@ -144,7 +148,88 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
 
     @Override
     public void tick() {
+        if(world == null || world.isRemote) {
+            return;
+        }
+        timer++;
+        // 1s = 20 ticks = 10 redstone ticks, 8 ticks matches hopper cooldown
+        int timerGoal = valid ? 8 : 20;
+        if (timer < timerGoal) {
+            return;
+        }
 
+        timer -= timerGoal;
+        valid = validateCrafting();
+
+        if(valid) {
+            valid = doCrafting();
+        }
+    }
+
+    private boolean validateCrafting() {
+        if(world == null || world.isRemote) {
+            return false;
+        }
+        if(recipt == null) {
+            return false;
+        }
+
+        BlockState blockState = world.getBlockState(pos);
+        if(!blockState.get(FactoryBlock.loadedProperty)) {
+            return false;
+        }
+        if(!blockState.get(FactoryBlock.enabledProperty)) {
+            return false;
+        }
+
+        CraftingInventory ci = new CraftingInventory(new DummyContainer(), 3, 3);
+        for(int i = 0; i < 9; i++) {
+            ci.setInventorySlotContents(i, content.get(i));
+        }
+        if(!recipt.matches(ci, world)) {
+            recipt = null;
+            reciptRL = null;
+            return false;
+        }
+
+        for(int i = 0; i < 9; i++) {
+            ci.setInventorySlotContents(i, content.get(i + 10));
+        }
+        return recipt.matches(ci, world);
+    }
+
+    private boolean doCrafting() {
+        ItemStack gStack = getStackInSlot(9);
+        if(gStack.isEmpty()) {
+            return false;
+        }
+
+        int made = gStack.getCount();
+        ItemStack oStack = getStackInSlot(19);
+        if(!oStack.isEmpty()) {
+            if(oStack.getItem() != gStack.getItem()) {
+                return false;
+            }
+            if(oStack.getMaxStackSize() < oStack.getCount() + made) {
+                return false;
+            }
+        }
+
+        for(int i = 0; i < 9; i++) {
+            ItemStack rStack = getStackInSlot(i);
+            if(rStack.isEmpty()) {
+                continue;
+            }
+            ItemStack iStack = getStackInSlot(10 + i);
+            iStack.shrink(1);
+        }
+
+        if(!oStack.isEmpty()) {
+            oStack.grow(made);
+        } else {
+            setInventorySlotContents(19, gStack.copy());
+        }
+        return true;
     }
 
     public void setRecipeUsed(@Nonnull World world, @Nonnull ResourceLocation recipt) {
@@ -195,24 +280,9 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
         return reciptRL;
     }
 
-    /*
-    public void makeListner(FactoryContainer container) {
-        container.addListener(this);
-    }
-
     @Override
-    public void sendAllContents(Container containerToSend, NonNullList<ItemStack> itemsList) {
-        Factory.LOGGER.info("sendAllContents triggered");
+    public void markDirty() {
+        super.markDirty();
+        tellListners(this);
     }
-
-    @Override
-    public void sendSlotContents(Container containerToSend, int slotInd, ItemStack stack) {
-        Factory.LOGGER.info("sendSlotContents triggered");
-    }
-
-    @Override
-    public void sendWindowProperty(Container containerIn, int varToUpdate, int newValue) {
-        Factory.LOGGER.info("sendWindowProperty triggered");
-    }
-    */
 }

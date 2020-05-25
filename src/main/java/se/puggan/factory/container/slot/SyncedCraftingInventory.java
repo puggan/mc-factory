@@ -5,7 +5,7 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.item.ItemStack;
 
-public class SyncedCraftingInventory extends CraftingInventory {
+public class SyncedCraftingInventory extends CraftingInventory implements IIventoryListner {
     IInventory other;
     int otherIndex;
 
@@ -13,10 +13,21 @@ public class SyncedCraftingInventory extends CraftingInventory {
         super(eventHandlerIn, width, height);
         other = inventory;
         otherIndex = inventoryIndex;
+        fetchOther();
+    }
+
+    private boolean fetchOther() {
+        boolean changed = false;
         int max = this.getSizeInventory();
         for(int index = 0; index < max; index++) {
-            super.setInventorySlotContents(index, other.getStackInSlot(index + otherIndex));
+            ItemStack otherStack = other.getStackInSlot(index + otherIndex);
+            ItemStack ourStack = super.getStackInSlot(index);
+            if(ourStack != otherStack && !ourStack.equals(otherStack, false)) {
+                changed = true;
+                super.setInventorySlotContents(index, otherStack);
+            }
         }
+        return changed;
     }
 
     @Override
@@ -38,6 +49,16 @@ public class SyncedCraftingInventory extends CraftingInventory {
         int max = otherIndex + this.getSizeInventory();
         for(int index = otherIndex; index < max; index++) {
             other.removeStackFromSlot(index);
+        }
+    }
+
+    @Override
+    public void inventoryUpdated(IInventory inv) {
+        if(inv != other) {
+            return;
+        }
+        if(fetchOther()) {
+            markDirty();
         }
     }
 }
