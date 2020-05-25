@@ -20,6 +20,7 @@ import se.puggan.factory.container.FactoryContainer;
 import se.puggan.factory.container.FactoryEntity;
 import se.puggan.factory.container.FactoryScreen;
 import se.puggan.factory.items.FactoryItem;
+import se.puggan.factory.network.FactoryNetwork;
 
 public class RegistryHandler {
     public static final DeferredRegister<Item> ITEMS = new DeferredRegister<Item>(ForgeRegistries.ITEMS, Factory.MOD_ID);
@@ -33,6 +34,7 @@ public class RegistryHandler {
         BLOCKS.register(modEventBus);
         TILE_ENTITIES.register(modEventBus);
         CONTAINERS.register(modEventBus);
+        FactoryNetwork.init();
     }
 
     @OnlyIn(Dist.DEDICATED_SERVER)

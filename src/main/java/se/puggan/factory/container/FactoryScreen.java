@@ -24,6 +24,7 @@ public class FactoryScreen extends ContainerScreen<FactoryContainer> {
         super(container, inv, name);
         fContainer = container;
         fContainer.setScreen(this);
+        enabled = fContainer.isEnabled();
     }
 
     public void recipeToggle(Button button) {

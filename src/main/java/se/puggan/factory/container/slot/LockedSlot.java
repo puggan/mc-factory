@@ -9,8 +9,8 @@ import net.minecraft.item.ItemStack;
 public class LockedSlot extends Slot {
     public boolean enabled;
 
-    public LockedSlot(IInventory inventoryIn, int index, int xPosition, int yPosition, boolean enabled) {
-        super(inventoryIn, index, xPosition, yPosition);
+    public LockedSlot(IInventory inventory, int index, int xPosition, int yPosition, boolean enabled) {
+        super(inventory, index, xPosition, yPosition);
         this.enabled = enabled;
     }
 

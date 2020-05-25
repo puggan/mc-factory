@@ -32,6 +32,9 @@ public class FactoryBlock extends ContainerBlock {
     public static final BooleanProperty enabledProperty = BlockStateProperties.ENABLED;
     public static final BooleanProperty openProperty = BlockStateProperties.OPEN;
 
+    public static World lastWorld;
+    public static BlockPos lastBlockPosition;
+
     public FactoryBlock() {
         super(Properties.from(Blocks.CRAFTING_TABLE));
         BlockState bs = getDefaultState();
@@ -44,18 +47,21 @@ public class FactoryBlock extends ContainerBlock {
     @Override
     @Nonnull
     @Deprecated
-    public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
-        ActionResultType defaultType = super.onBlockActivated(state, worldIn, pos, player, handIn, hit);
+    public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockRayTraceResult hit) {
+        Factory.LOGGER.warn("onBlockActivated()");
+        ActionResultType defaultType = super.onBlockActivated(state, world, pos, player, hand, hit);
 
         if (defaultType != ActionResultType.PASS) {
             return defaultType;
         }
 
-        if (worldIn.isRemote) {
+        if (world.isRemote) {
+            lastWorld = world;
+            lastBlockPosition = pos;
             return ActionResultType.SUCCESS;
         }
 
-        INamedContainerProvider container = state.getContainer(worldIn, pos);
+        INamedContainerProvider container = state.getContainer(world, pos);
 
         player.openContainer(container);
         return ActionResultType.SUCCESS;
