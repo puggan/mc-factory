@@ -1,0 +1,6 @@
+{
+  "parent": "factory:block/factory",
+  "textures": {
+    "side": "factory:block/factory_side_off"
+  }
+}

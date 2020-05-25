@@ -1,5 +1,16 @@
 {
   "variants": {
-    "": { "model": "factory:block/factory" }
+    "open=true": {
+      "model": "factory:block/factory"
+    },
+    "open=false,loaded=false": {
+      "model": "factory:block/factory"
+    },
+    "open=false,loaded=true,enabled=false": {
+      "model": "factory:block/factory_off"
+    },
+    "open=false,loaded=true,enabled=true": {
+      "model": "factory:block/factory_on"
+    }
   }
 }
