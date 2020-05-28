@@ -136,7 +136,7 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> imp
     }
 
     @Override
-    public void fillStackedContents(RecipeItemHelper itemHelperIn) {
+    public void fillStackedContents(@Nonnull RecipeItemHelper itemHelperIn) {
         cInvetory.fillStackedContents(itemHelperIn);
     }
 
@@ -202,8 +202,6 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> imp
             }
         }
 
-        // TODO send to server, right now this function is only run on the client side
-        Factory.LOGGER.info("activate() @ " + (pInventory.player instanceof ServerPlayerEntity ? "Server" : "Client") + "/" + (pInventory.player.world.isRemote ? "Remote" : "Local"));
         enabled = true;
         fInventory.stateEnabled(true);
         if(send) {
@@ -252,8 +250,7 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> imp
                 ((ItemSlot) slot).enabled = false;
             }
         }
-        // TODO send to server, right now this function is only run on the client side
-        Factory.LOGGER.info("deactivate() @ " + (pInventory.player instanceof ServerPlayerEntity ? "Server" : "Client") + "/" + (pInventory.player.world.isRemote ? "Remote" : "Local"));
+
         enabled = false;
         fInventory.stateEnabled(false);
         if(send) {
@@ -263,7 +260,7 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> imp
     }
 
     @Override
-    public void onCraftMatrixChanged(IInventory inventoryIn) {
+    public void onCraftMatrixChanged(@Nonnull IInventory inventoryIn) {
         if (loading) {
             return;
         }
@@ -308,16 +305,12 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> imp
     }
 
     @Override
-    public void onContainerClosed(PlayerEntity playerIn) {
+    public void onContainerClosed(@Nonnull PlayerEntity playerIn) {
         super.onContainerClosed(playerIn);
         if(clientSide) {
             return;
         }
         fInventory.stateOpen(false);
-    }
-
-    public ServerPlayerEntity getServerPlayer() {
-        return pInventory.player instanceof ServerPlayerEntity ? (ServerPlayerEntity)pInventory.player : null;
     }
 
     public boolean isEnabled() {
