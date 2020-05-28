@@ -10,6 +10,7 @@ import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.IRecipeHelperPopulator;
 import net.minecraft.inventory.InventoryHelper;
+import net.minecraft.inventory.container.ClickType;
 import net.minecraft.inventory.container.RecipeBookContainer;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
@@ -328,5 +329,47 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> imp
 
     public boolean isEnabled() {
         return enabled;
+    }
+
+    @Override
+    public ItemStack transferStackInSlot(PlayerEntity player, int index) {
+        Slot slot = this.inventorySlots.get(index);
+        if (slot == null || !slot.getHasStack()) {
+            return ItemStack.EMPTY;
+        }
+
+        // Tranfer to player invetory
+        int from = outputSlotIndex + 1;
+        int to = outputSlotIndex + 9 * 4;
+        boolean reverse = true;
+
+        ItemStack slotStack = slot.getStack();
+        ItemStack newStack = slotStack.copy();
+
+        // Transfer from player (when clicking in the player invetory)
+        if(slot instanceof PlayerSlot) {
+            // To recipt (when disabled)
+            from = 0;
+            to =  resultSlotIndex-1;
+            reverse = false;
+
+            if(enabled) {
+                // To input (when enabled)
+                from = resultSlotIndex+1;
+                to = outputSlotIndex-1;
+            }
+        }
+
+        //
+        if (!this.mergeItemStack(slotStack, from, to + 1, reverse)) {
+            return ItemStack.EMPTY;
+        }
+
+        if (slotStack.isEmpty()) {
+            slot.putStack(ItemStack.EMPTY);
+        } else {
+            slot.onSlotChanged();
+        }
+        return newStack;
     }
 }
