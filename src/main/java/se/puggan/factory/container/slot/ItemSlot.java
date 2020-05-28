@@ -35,13 +35,5 @@ public class ItemSlot extends Slot {
     public void lockItem(@Nullable Item item) {
         lockedItem = item;
         enabled = item != null;
-        ItemStack stack = getStack();
-        if(stack.isEmpty()) {
-            return;
-        }
-        if(stack.getItem() == item) {
-            return;
-        }
-        // TODO return item to player
     }
 }

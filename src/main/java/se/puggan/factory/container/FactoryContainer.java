@@ -188,13 +188,16 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> imp
 
     public boolean activate() {return activate(true);}
     public boolean activate(boolean send) {
+        //<editor-fold desc="ServerSide">
         if(pInventory.player.world != null && !pInventory.player.world.isRemote) {
             return true;
         }
+        //</editor-fold>
+
+        //<editor-fold desc="Client Side">
         if (screen != null) {
             screen.enable();
         }
-        if (enabled) return true;
         for (int i = 10; i < 20; i++) {
             Slot s = inventorySlots.get(i);
             if (s instanceof ItemSlot) {
@@ -202,16 +205,21 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> imp
             }
         }
 
+        if (enabled) {
+            return true;
+        }
         enabled = true;
         fInventory.stateEnabled(true);
         if(send) {
             FactoryNetwork.CHANNEL.sendToServer(new StateEnabledMessage(fInventory.getPos(), true));
         }
         return true;
+        //</editor-fold>
     }
 
     public boolean deactivate() {return deactivate(true);}
     public boolean deactivate(boolean send) {
+        //<editor-fold desc="Server Side">
         if(pInventory.player.world != null && !pInventory.player.world.isRemote) {
             boolean stuffToDrop = false;
             for (int i = resultSlotIndex + 1; i <= outputSlotIndex; i++) {
@@ -239,7 +247,9 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> imp
             detectAndSendChanges();
             return true;
         }
+        //</editor-fold>
 
+        //<editor-fold desc="Client Side">
         if (screen != null) {
             screen.disable();
         }
@@ -257,6 +267,7 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> imp
             FactoryNetwork.CHANNEL.sendToServer(new StateEnabledMessage(fInventory.getPos(), false));
         }
         return true;
+        //</editor-fold>
     }
 
     @Override
@@ -269,6 +280,7 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> imp
             return;
         }
 
+        //<editor-fold desc="ServerSide">
         ICraftingRecipe recipe = fInventory.getRecipeUsed();
         if (recipe != null && recipe.matches(cInvetory, pInventory.player.world)) {
             return;
@@ -292,6 +304,7 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> imp
             (new SetRecipeUsedMessage(fInventory.getPos(), recipe)).sendToPlayer((ServerPlayerEntity) pInventory.player);
         }
         setReciptResult(recipe.getCraftingResult(cInvetory));
+        //</editor-fold>
     }
 
     private void setReciptResult(ItemStack stack) {
