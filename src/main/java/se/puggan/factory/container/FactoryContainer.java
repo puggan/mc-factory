@@ -150,10 +150,7 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> imp
 
     @Override
     public boolean matches(IRecipe<? super CraftingInventory> recipeIn) {
-        fInventory.modeCrafting = true;
-        boolean matches = recipeIn.matches(cInvetory, pInventory.player.world);
-        fInventory.modeCrafting = false;
-        return matches;
+        return recipeIn.matches(cInvetory, pInventory.player.world);
     }
 
     @Override
