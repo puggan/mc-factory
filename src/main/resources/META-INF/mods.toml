@@ -23,7 +23,7 @@ issueTrackerURL="https://github.com/puggan/mc-factory/issues" #optional
     # A URL for the "homepage" for this mod, displayed in the mod UI
     displayURL="https://github.com/puggan/mc-factory" #optional
     # A file name (in the root of the mod JAR) containing a logo for display
-    logoFile="assets/minecraft/textures/block/factory_front.png" #optional
+    logoFile="logo.png"
     # A text field displayed in the mod UI
     credits="Made my Puggan" #optional
     # A text field displayed in the mod UI
