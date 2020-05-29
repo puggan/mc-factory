@@ -40,17 +40,14 @@ public class SetRecipeUsedMessage extends NetworkMessage {
 
     @Override
     public void handle(Supplier<NetworkEvent.Context> contextSupplier) {
-        Factory.LOGGER.info("SetRecipeUsedMessage.handle()");
         NetworkEvent.Context contextPromise = contextSupplier.get();
         if (!FMLEnvironment.dist.isClient()) {
             Factory.LOGGER.error("SetRecipeUsedMessage.handle() is not client");
             return;
         }
 
-        Factory.LOGGER.info("SetRecipeUsedMessage.handle() is client");
         contextPromise.enqueueWork(
             () -> {
-                Factory.LOGGER.info("SetRecipeUsedMessage.handle() enqueueWork");
                 PlayerEntity player = Minecraft.getInstance().player;
                 if(player == null) {
                     Factory.LOGGER.error("SetRecipeUsedMessage.handle() no player");
@@ -65,7 +62,6 @@ public class SetRecipeUsedMessage extends NetworkMessage {
                 }
 
                 FactoryEntity factoryEntity = (FactoryEntity) genericEntity;
-                Factory.LOGGER.info("SetRecipeUsedMessage.handle() setRecipeUsed()");
                 factoryEntity.setRecipeUsed(player.world, recipe);
             }
         );

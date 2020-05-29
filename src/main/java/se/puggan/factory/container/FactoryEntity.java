@@ -83,7 +83,6 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
             ItemStackHelper.saveAllItems(compound, content);
         }
         compound.putString("recipt", reciptRL == null ? "" : reciptRL.toString());
-        Factory.LOGGER.warn("Saved reciept: " + (reciptRL == null ? "" : reciptRL.toString()));
         return compound;
     }
 
@@ -94,7 +93,6 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
             ItemStackHelper.loadAllItems(compound, content);
         }
         reciptRL = new ResourceLocation(compound.getString("recipt"));
-        Factory.LOGGER.warn("Loaded reciept: " + reciptRL);
         if(world != null) {
             setRecipeUsed(world, reciptRL);
         }
@@ -106,19 +104,13 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
             Factory.LOGGER.warn("Failed to load state " + bp.getName() + ", no world");
             return false;
         }
-        Factory.LOGGER.warn("Loading state " + bp.getName());
         return world.getBlockState(pos).get(bp);
     }
 
     public void setState(BooleanProperty bp, boolean value) {
         if (world == null) {
-            Factory.LOGGER.warn("setState(" + bp.getName() + ", " + (value ? "true" : "false") + ") -> no world");
             return;
         }
-        if(world.isRemote) {
-            Factory.LOGGER.warn("setState(" + bp.getName() + ", " + (value ? "true" : "false") + ") -> remote");
-        }
-        Factory.LOGGER.warn("setState(" + bp.getName() + ", " + (value ? "true" : "false") + ") -> update");
         BlockState oldState = world.getBlockState(pos);
         BlockState newState = oldState.with(bp, value);
         world.setBlockState(pos, newState, 3);
@@ -237,7 +229,6 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
     public void setRecipeUsed(@Nonnull World world, @Nonnull ResourceLocation recipt) {
         reciptRL = recipt;
         if(recipt.getPath().length() <= 0) {
-            Factory.LOGGER.info("setRecipeUsed() empty");
             setRecipeUsed(null);
             return;
         }
@@ -248,7 +239,6 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
             return;
         }
 
-        Factory.LOGGER.info("setRecipeUsed() found " + recipt);
         setRecipeUsed(optionalIRecipe.get());
     }
 
@@ -256,7 +246,6 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
     public void setRecipeUsed(@Nullable IRecipe<?> newRecipt) {
         boolean loaded = newRecipt instanceof ICraftingRecipe;
         reciptRL = loaded ? newRecipt.getId() : null;
-        Factory.LOGGER.info("setRecipeUsed() " + newRecipt + " is " + (loaded ? "ICraftingRecipe" : "NOT ICraftingRecipe") + " @ " + this.toString());
         recipt = loaded ? (ICraftingRecipe) newRecipt : null;
         if(world == null || world.isRemote) {
             return;
@@ -267,7 +256,6 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
     @Nullable
     @Override
     public ICraftingRecipe getRecipeUsed() {
-        Factory.LOGGER.info("getRecipeUsed() -> " + (recipt == null ? "null" : recipt.getId()) + " @ " + this.toString());
         return recipt;
     }
 

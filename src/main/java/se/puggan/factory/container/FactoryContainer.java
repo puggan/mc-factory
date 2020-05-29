@@ -10,13 +10,13 @@ import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.IRecipeHelperPopulator;
 import net.minecraft.inventory.InventoryHelper;
-import net.minecraft.inventory.container.ClickType;
-import net.minecraft.inventory.container.RecipeBookContainer;
-import net.minecraft.inventory.container.Slot;
+import net.minecraft.inventory.container.*;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.*;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.IntReferenceHolder;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
@@ -66,17 +66,14 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> imp
                 fInventory.stateOpen(true);
             }
             enabled = fInventory.getState(FactoryBlock.enabledProperty);
-            Factory.LOGGER.warn("FactoryContainer() " + (enabled ? "Enabled" : "Disabled"));
         } else {
             clientSide = !(pInventory.player instanceof ServerPlayerEntity);
         }
         slotInventory();
         loading = false;
         if(enabled) {
-            Factory.LOGGER.warn("FactoryContainer() Activate");
             activate(false);
         } else {
-            Factory.LOGGER.warn("FactoryContainer() De-Activate");
             deactivate(false);
         }
         onCraftMatrixChanged(cInvetory);
@@ -90,7 +87,7 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> imp
         // Receipt Inventory, 0-8
         for (int y = 0; y < 3; y++) {
             for (int x = 0; x < 3; x++) {
-                addSlot(new ReceiptSlot(cInvetory, 3 * y + x, 79 + 18 * x, 16 + 18 * y));
+                addSlot(new ReceiptSlot(cInvetory, 3 * y + x, 79 + 18 * x, 16 + 18 * y, enabled));
             }
         }
         // Receipt output, 9
@@ -187,10 +184,51 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> imp
         );
     }
 
+    public void lockInput() {
+        for (int i = 0; i < 10; i++) {
+            Slot slot = inventorySlots.get(i);
+            if (!(slot instanceof ReceiptSlot)) {
+                continue;
+            }
+
+            ReceiptSlot rSlot = (ReceiptSlot) slot;
+            if(rSlot.locked != enabled) {
+                rSlot.locked = enabled;
+            }
+        }
+
+        for (int i = 10; i < 20; i++) {
+            Slot slot = inventorySlots.get(i);
+            if (!(slot instanceof ItemSlot)) {
+                continue;
+            }
+
+            ItemSlot itemSlot = (ItemSlot) slot;
+            if (!enabled) {
+                if(itemSlot.enabled) {
+                    itemSlot.lockItem((Item) null);
+                }
+                continue;
+            }
+
+            ItemStack stack = inventorySlots.get(i - 10).getStack();
+            if (stack.isEmpty()) {
+                if(itemSlot.enabled) {
+                    itemSlot.lockItem((Item) null);
+                }
+                continue;
+            }
+
+            itemSlot.lockItem(stack);
+        }
+    }
+
     public boolean activate() {return activate(true);}
     public boolean activate(boolean send) {
         //<editor-fold desc="ServerSide">
         if(pInventory.player.world != null && !pInventory.player.world.isRemote) {
+            enabled = true;
+            lockInput();
             return true;
         }
         //</editor-fold>
@@ -199,17 +237,12 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> imp
         if (screen != null) {
             screen.enable();
         }
-        for (int i = 10; i < 20; i++) {
-            Slot s = inventorySlots.get(i);
-            if (s instanceof ItemSlot) {
-                ((ItemSlot) s).lockItem(inventorySlots.get(i - 10));
-            }
-        }
 
         if (enabled) {
             return true;
         }
         enabled = true;
+        lockInput();
         fInventory.stateEnabled(true);
         if(send) {
             FactoryNetwork.CHANNEL.sendToServer(new StateEnabledMessage(fInventory.getPos(), true));
@@ -245,6 +278,8 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> imp
                 InventoryHelper.dropInventoryItems(pInventory.player.world, fInventory.getPos(), inputInvetory);
             }
 
+            enabled = false;
+            lockInput();
             detectAndSendChanges();
             return true;
         }
@@ -263,6 +298,7 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> imp
         }
 
         enabled = false;
+        lockInput();
         fInventory.stateEnabled(false);
         if(send) {
             FactoryNetwork.CHANNEL.sendToServer(new StateEnabledMessage(fInventory.getPos(), false));
@@ -291,7 +327,6 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> imp
         if (!optional.isPresent()) {
             if (recipe != null) {
                 fInventory.setRecipeUsed(null);
-                Factory.LOGGER.debug("onCraftMatrixChanged(): no Recipe");
             }
             deactivate(true);
             setReciptResult(ItemStack.EMPTY);
@@ -299,7 +334,6 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> imp
         }
 
         recipe = optional.get();
-        Factory.LOGGER.debug("onCraftMatrixChanged(): Recipe " + recipe.getId());
         fInventory.setRecipeUsed(recipe);
         if(pInventory.player instanceof ServerPlayerEntity) {
             (new SetRecipeUsedMessage(fInventory.getPos(), recipe)).sendToPlayer((ServerPlayerEntity) pInventory.player);
@@ -325,6 +359,16 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> imp
             return;
         }
         fInventory.stateOpen(false);
+    }
+
+    public void updateEnabled() {
+        if(fInventory == null) return;
+        boolean enabledState = fInventory.getState(FactoryBlock.enabledProperty);
+        if(enabledState && !enabled) {
+            activate();
+        } else if(enabled && !enabledState) {
+            deactivate();
+        }
     }
 
     public boolean isEnabled() {
@@ -371,5 +415,12 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> imp
             slot.onSlotChanged();
         }
         return newStack;
+    }
+
+    @Override
+    public ItemStack slotClick(int slotId, int dragType, ClickType clickType, PlayerEntity player) {
+        updateEnabled();
+        lockInput();
+        return super.slotClick(slotId, dragType, clickType, player);
     }
 }

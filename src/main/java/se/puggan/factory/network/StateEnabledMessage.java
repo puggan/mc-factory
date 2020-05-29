@@ -38,7 +38,6 @@ public class StateEnabledMessage extends NetworkMessage {
 
     @Override
     public void handle(Supplier<NetworkEvent.Context> contextSupplier) {
-        Factory.LOGGER.info("StateEnabledMessage.handle()");
         NetworkEvent.Context contextPromise = contextSupplier.get();
         ServerPlayerEntity player = contextPromise.getSender();
         if(player == null) {
@@ -51,7 +50,6 @@ public class StateEnabledMessage extends NetworkMessage {
             return;
         }
 
-        Factory.LOGGER.info("StateEnabledMessage.handle() is server");
         BlockState bs = world.getBlockState(pos);
         if (!enabled) {
             world.setBlockState(pos, bs.with(FactoryBlock.enabledProperty, false));

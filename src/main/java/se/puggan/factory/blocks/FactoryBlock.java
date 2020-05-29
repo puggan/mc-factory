@@ -48,7 +48,6 @@ public class FactoryBlock extends ContainerBlock {
     @Nonnull
     @Deprecated
     public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockRayTraceResult hit) {
-        Factory.LOGGER.warn("onBlockActivated()");
         ActionResultType defaultType = super.onBlockActivated(state, world, pos, player, hand, hit);
 
         if (defaultType != ActionResultType.PASS) {
