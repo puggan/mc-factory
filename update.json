@@ -1,10 +1,11 @@
 {
   "homepage": "https://github.com/puggan/mc-factory",
   "1.15.2": {
-    "1.15.2-0.0.1": "Draft 1"
+    "1.15.2-0.0.1": "Draft 1",
+    "1.15.2-0.0.2": "Draft 2"
   },
   "promos": {
-    "1.15.2-latest": "1.15.2-0.0.1",
-    "1.15.2-recommended": "1.15.2-0.0.1"
+    "1.15.2-latest": "1.15.2-0.0.2",
+    "1.15.2-recommended": "1.15.2-0.0.2"
   }
 }

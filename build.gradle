@@ -13,7 +13,7 @@ apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 
-version = '0.0.1'
+version = '0.0.2'
 group = 'se.puggan.factory'
 archivesBaseName = 'factory'
 
@@ -117,7 +117,7 @@ jar {
         attributes([
             "Specification-Title": "Factory",
             "Specification-Vendor": "Puggan",
-            "Specification-Version": "0.0.1",
+            "Specification-Version": "0.0.2",
             "Implementation-Title": project.name,
             "Implementation-Version": "${version}",
             "Implementation-Vendor": "Puggan",
