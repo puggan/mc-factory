@@ -2,19 +2,14 @@ package se.puggan.factory.container;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.*;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.ICraftingRecipe;
 import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.item.crafting.RecipeItemHelper;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-import net.minecraft.nbt.StringNBT;
-import net.minecraft.network.PacketBuffer;
 import net.minecraft.state.BooleanProperty;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.LockableLootTileEntity;
@@ -25,17 +20,18 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.items.CapabilityItemHandler;
 import se.puggan.factory.Factory;
 import se.puggan.factory.blocks.FactoryBlock;
 import se.puggan.factory.container.slot.IInventorySender;
-import se.puggan.factory.network.FactoryNetwork;
+import se.puggan.factory.util.IntPair;
 import se.puggan.factory.util.RegistryHandler;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.Optional;
+import java.util.TreeSet;
 
 // implements ISidedInventory
 public class FactoryEntity extends LockableLootTileEntity implements ITickableTileEntity, IRecipeHolder, IRecipeHelperPopulator, IInventorySender, ISidedInventory {
@@ -281,7 +277,19 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
         if (side == Direction.DOWN) {
             return new int[]{19};
         }
-        return new int[]{10, 11, 12, 13, 14, 15, 16, 17, 18};
+        if(!getState(FactoryBlock.enabledProperty)) {
+            return new int[]{0};
+        }
+        Collection<IntPair> list = new TreeSet<IntPair>();
+        for(int index = 10; index < 19; index++) {
+            ItemStack rStack = content.get(index - 10);
+            if(rStack.isEmpty()) {
+                continue;
+            }
+            ItemStack iStack = content.get(index);
+            list.add(new IntPair(index, iStack.getCount()));
+        }
+        return IntPair.aArray(list);
     }
 
     @Override
