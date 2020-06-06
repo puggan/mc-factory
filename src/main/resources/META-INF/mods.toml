@@ -15,7 +15,7 @@ issueTrackerURL="https://github.com/puggan/mc-factory/issues" #optional
     # The modid of the mod
     modId="factory" #mandatory
     # The version number of the mod - there's a few well known ${} variables useable here or just hardcode it
-    version="1.15.2-0.0.2" #mandatory
+    version="1.15.2-1.0.0" #mandatory
      # A display name for the mod
     displayName="Factory Mod" #mandatory
     # A URL to query for updates for this mod. See the JSON update specification <here>

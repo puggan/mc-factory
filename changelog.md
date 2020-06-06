@@ -1,4 +1,7 @@
 # Changelog 
+## v1.0.0
+* Offical release
+
 ## v0.0.2
 * The hopper input now priorities empty slots
 
