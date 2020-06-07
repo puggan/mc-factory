@@ -11,7 +11,6 @@ import net.minecraftforge.common.extensions.IForgeContainerType;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import se.puggan.factory.Factory;
@@ -63,9 +62,6 @@ public class RegistryHandler {
             "factory",
             () -> {
                 ContainerType<FactoryContainer> containerType = IForgeContainerType.create(FactoryContainer::new);
-//                if(FMLEnvironment.dist.isClient()) {
-//                    ScreenManager.registerFactory(containerType, FactoryScreen::new);
-//                }
                 return containerType;
             }
     );

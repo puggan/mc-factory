@@ -3,7 +3,6 @@ package se.puggan.factory.container.slot;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.container.Slot;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 public class LockedSlot extends Slot {

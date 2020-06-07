@@ -5,8 +5,6 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.ContainerType;
 
-import javax.annotation.Nullable;
-
 public class DummyContainer extends Container {
     protected DummyContainer() {
         super(ContainerType.CRAFTING, 0);
