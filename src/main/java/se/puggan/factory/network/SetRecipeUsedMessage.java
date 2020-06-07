@@ -9,6 +9,8 @@ import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.network.NetworkEvent;
 import net.minecraftforge.fml.network.PacketDistributor;
@@ -46,26 +48,27 @@ public class SetRecipeUsedMessage extends NetworkMessage {
             return;
         }
 
-        contextPromise.enqueueWork(
-            () -> {
-                PlayerEntity player = Minecraft.getInstance().player;
-                if(player == null) {
-                    Factory.LOGGER.error("SetRecipeUsedMessage.handle() no player");
-                    return;
-                }
-                BlockState bs = player.world.getBlockState(pos);
-                INamedContainerProvider genericEntity = bs.getContainer(player.world, pos);
-
-                if (!(genericEntity instanceof FactoryEntity)) {
-                    Factory.LOGGER.error("SetRecipeUsedMessage.handle() entity no FactoryEntity");
-                    return;
-                }
-
-                FactoryEntity factoryEntity = (FactoryEntity) genericEntity;
-                factoryEntity.setRecipeUsed(player.world, recipe);
-            }
-        );
+        contextPromise.enqueueWork(this::clientHandle);
         contextPromise.setPacketHandled(true);
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    private void clientHandle() {
+        PlayerEntity player = Minecraft.getInstance().player;
+        if(player == null) {
+            Factory.LOGGER.error("SetRecipeUsedMessage.handle() no player");
+            return;
+        }
+        BlockState bs = player.world.getBlockState(pos);
+        INamedContainerProvider genericEntity = bs.getContainer(player.world, pos);
+
+        if (!(genericEntity instanceof FactoryEntity)) {
+            Factory.LOGGER.error("SetRecipeUsedMessage.handle() entity no FactoryEntity");
+            return;
+        }
+
+        FactoryEntity factoryEntity = (FactoryEntity) genericEntity;
+        factoryEntity.setRecipeUsed(player.world, recipe);
     }
 
     public void sendToPlayer(ServerPlayerEntity player) {
