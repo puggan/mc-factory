@@ -42,6 +42,7 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
     private int timer;
     private boolean valid;
     private boolean accept;
+    public FactoryContainer container;
 
     public FactoryEntity() {
         super(RegistryHandler.FACTORY_ENTITY.get());
@@ -70,7 +71,8 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
             int windowId,
             @Nullable PlayerInventory playerInventory
     ) {
-        return new FactoryContainer(windowId, playerInventory, this);
+        this.container = new FactoryContainer(windowId, playerInventory, this);
+        return this.container;
     }
 
     public CompoundNBT write(CompoundNBT compound) {
@@ -247,6 +249,9 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
             return;
         }
         stateLoaded(loaded);
+        if(container != null) {
+            container.lockInput();
+        }
     }
 
     @Nullable
@@ -328,5 +333,9 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
             return LazyOptional.empty();
         }
         return super.getCapability(cap, side);
+    }
+
+    public void setContainer(FactoryContainer container) {
+        this.container = container;
     }
 }

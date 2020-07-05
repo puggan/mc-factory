@@ -26,4 +26,9 @@ public class ReceiptSlot extends Slot {
     public boolean canTakeStack(PlayerEntity playerIn) {
         return !locked;
     }
+
+    @Override
+    public boolean isEnabled() {
+        return !locked || getHasStack();
+    }
 }

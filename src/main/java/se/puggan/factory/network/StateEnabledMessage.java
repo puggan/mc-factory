@@ -60,8 +60,9 @@ public class StateEnabledMessage extends NetworkMessage {
             Factory.LOGGER.error("StateEnabledMessage.handle() position dosn't contain a FactoryEntity");
             return;
         }
+        FactoryEntity fInvetory = (FactoryEntity) entity;
 
-        if (((FactoryEntity) entity).getRecipeRL() == null) {
+        if (fInvetory.getRecipeRL() == null) {
             Factory.LOGGER.error("StateEnabledMessage.handle() position dosn't have a recipe");
             (new SetRecipeUsedMessage(pos, null)).sendToPlayer(player);
             return;
@@ -69,5 +70,6 @@ public class StateEnabledMessage extends NetworkMessage {
 
         world.setBlockState(pos, bs.with(FactoryBlock.enabledProperty, enabled));
         contextPromise.setPacketHandled(true);
+        fInvetory.container.updateEnabled(false);
     }
 }
