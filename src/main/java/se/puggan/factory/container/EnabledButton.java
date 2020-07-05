@@ -7,13 +7,11 @@ import net.minecraft.util.ResourceLocation;
 
 public class EnabledButton extends ImageButton /*implements Button.IPressable*/ {
     public boolean enabled;
-    private static final ResourceLocation OFF_TEXTURE = new ResourceLocation("factory:textures/gui/off_button.png");
-    private static final ResourceLocation ON_TEXTURE = new ResourceLocation("factory:textures/gui/on_button.png");
     private final Runnable onFunction;
     private final Runnable offFunction;
 
-    public EnabledButton(boolean enabled, Runnable onPress, Runnable offPress) {
-        super(0, 0, 18, 18, 0, 0, 18, enabled ? ON_TEXTURE : OFF_TEXTURE, (button) -> {});
+    public EnabledButton(int xIn, int yIn, boolean enabled, Runnable onPress, Runnable offPress) {
+        super(xIn, yIn, 20, 18, 177, 0, 19, FactoryScreen.GUI_MAP, (button) -> {});
         this.enabled = enabled;
         onFunction = onPress;
         offFunction = offPress;
@@ -33,9 +31,18 @@ public class EnabledButton extends ImageButton /*implements Button.IPressable*/ 
     @Override
     public void renderButton(int p_renderButton_1_, int p_renderButton_2_, float p_renderButton_3_) {
         Minecraft minecraft = Minecraft.getInstance();
-        minecraft.getTextureManager().bindTexture(enabled ? ON_TEXTURE : OFF_TEXTURE);
+        minecraft.getTextureManager().bindTexture(FactoryScreen.GUI_MAP);
+        /*
+         * Green button: 177, 0, 20, 18
+         * Green pressed button: 177, 19, 20, 18
+         * Red button: 198, 0, 20, 18
+         * Red pressed button: 198, 19, 20, 18
+         */
         RenderSystem.disableDepthTest();
-        blit(x, y, (float)0, (float)0, width, height, 256, 256);
+        float textureX = enabled ? 177 : 198;
+        float textureY = isHovered() ? 19 : 0;
+
+        blit(x, y, textureX, textureY, width, height, 256, 256);
         RenderSystem.enableDepthTest();
     }
 }

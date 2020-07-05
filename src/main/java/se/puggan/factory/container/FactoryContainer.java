@@ -87,17 +87,17 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> imp
         // Receipt Inventory, 0-8
         for (int y = 0; y < 3; y++) {
             for (int x = 0; x < 3; x++) {
-                addSlot(new ReceiptSlot(cInvetory, 3 * y + x, 79 + 18 * x, 16 + 18 * y, enabled));
+                addSlot(new ReceiptSlot(cInvetory, 3 * y + x, 80 + 18 * x, 17 + 18 * y, enabled));
             }
         }
         // Receipt output, 9
-        addSlot(new HiddenSlot(craftingResultInventory, 0, 151, 16));
+        addSlot(new HiddenSlot(craftingResultInventory, 0, 152, 17));
 
         // InBox, 10-18
         for (int y = 0; y < 3; y++) {
             for (int x = 0; x < 3; x++) {
                 int index = 3 * y + x;
-                ItemSlot slot = new ItemSlot(inputInvetory, index, 7 + 18 * x, 16 + 18 * y, enabled);
+                ItemSlot slot = new ItemSlot(inputInvetory, index, 8 + 18 * x, 17 + 18 * y, enabled);
                 addSlot(slot);
                 if (enabled) {
                     slot.lockItem(inventorySlots.get(index));
@@ -105,7 +105,7 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> imp
             }
         }
         // Outbox, 19
-        ItemSlot outSlot = new ItemSlot(outputStackInventory, 0, 151, 52, false);
+        ItemSlot outSlot = new ItemSlot(outputStackInventory, 0, 152, 53, false);
         addSlot(outSlot);
         if (enabled) {
             outSlot.lockItem(craftingResultInventory.getStackInSlot(0));
@@ -113,13 +113,13 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> imp
 
         // Player Hotbar, 0-8
         for (int x = 0; x < 9; ++x) {
-            addSlot(new PlayerSlot(pInventory, x, 8 + x * 18, 143));
+            addSlot(new PlayerSlot(pInventory, x, 8 + x * 18, 142));
         }
 
         // Player Inventory, 9-35
         for (int y = 0; y < 3; ++y) {
             for (int x = 0; x < 9; ++x) {
-                addSlot(new PlayerSlot(pInventory, 9 + 9 * y + x, 8 + 18 * x, 85 + 18 * y));
+                addSlot(new PlayerSlot(pInventory, 9 + 9 * y + x, 8 + 18 * x, 84 + 18 * y));
             }
         }
     }

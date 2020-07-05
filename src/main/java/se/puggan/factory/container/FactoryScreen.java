@@ -13,10 +13,23 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import se.puggan.factory.container.slot.ItemSlot;
+import se.puggan.factory.container.slot.ReceiptSlot;
+
+import java.util.List;
+import java.util.Stack;
 
 public class FactoryScreen extends ContainerScreen<FactoryContainer> {
-    private final ResourceLocation GUI_OFF = new ResourceLocation("factory:textures/gui/factory.png");
-    private final ResourceLocation GUI_ON = new ResourceLocation("factory:textures/gui/factory_enabled.png");
+    /**
+     * name: x, y, w, h.
+     * background: 0, 0, 176, 166
+     * slot off: 151, 16, 18, 18
+     * slot on: 152, 83, 18, 18
+     * Green button: 177, 0, 20, 18
+     * Green pressed button: 177, 19, 20, 18
+     * Red button: 198, 0, 20, 18
+     * Red pressed button: 198, 19, 20, 18
+     */
+    public static final ResourceLocation GUI_MAP = new ResourceLocation("factory:textures/gui/factory_map.png");
     private static final ResourceLocation RECIPE_BUTTON_TEXTURE = new ResourceLocation("textures/gui/recipe_button.png");
     private final RecipeBookGui recipeBookGui = new RecipeBookGui();
 
@@ -24,6 +37,10 @@ public class FactoryScreen extends ContainerScreen<FactoryContainer> {
     private final FactoryContainer fContainer;
     private EnabledButton enabledButton;
     private ImageButton recipeButton;
+    private final int rButtonX = 150;
+    private final int rButtonY = 33;
+    private final int eButtonX = 60;
+    private final int eButtonY = 33;
 
     public FactoryScreen(FactoryContainer container, PlayerInventory inv, ITextComponent name) {
         super(container, inv, name);
@@ -40,12 +57,8 @@ public class FactoryScreen extends ContainerScreen<FactoryContainer> {
     }
 
     public void rePositionButtons() {
-        int xRButton = 151;
-        int yRButton = 34;
-        int xEButton = 61;
-        int yEButton = 34;
-        recipeButton.setPosition(guiLeft + xRButton, guiTop + yRButton);
-        enabledButton.setPosition(guiLeft + xEButton, guiTop + yEButton);
+        recipeButton.setPosition(guiLeft + rButtonX, guiTop + rButtonY);
+        enabledButton.setPosition(guiLeft + eButtonX, guiTop + eButtonY);
     }
 
     public void enable() {
@@ -62,6 +75,8 @@ public class FactoryScreen extends ContainerScreen<FactoryContainer> {
     protected void init() {
         super.init();
         enabledButton = new EnabledButton(
+                eButtonX,
+                eButtonY,
                 enabled,
                 fContainer::activate,
                 fContainer::deactivate
@@ -76,8 +91,8 @@ public class FactoryScreen extends ContainerScreen<FactoryContainer> {
         children.add(recipeBookGui);
         setFocusedDefault(recipeBookGui);
         recipeButton = new ImageButton(
-                0,
-                0,
+                rButtonX,
+                rButtonY,
                 20,
                 18,
                 0,
@@ -98,43 +113,41 @@ public class FactoryScreen extends ContainerScreen<FactoryContainer> {
     public void render(int mouseX, int mouseY, float partialTicks) {
         renderBackground();
         recipeBookGui.render(mouseX, mouseY, partialTicks);
+
         super.render(mouseX, mouseY, partialTicks);
 
-        if(container instanceof FactoryContainer) {
-            FactoryContainer fInvetory = container;
-            boolean ghostItems = false;
-            for(int slotIndex = fInvetory.resultSlotIndex + 1; slotIndex < fInvetory.outputSlotIndex; ++slotIndex) {
-                Slot slot = fInvetory.inventorySlots.get(slotIndex);
-                if(slot.getHasStack()) {
+        boolean ghostItems = false;
+        for (int slotIndex = container.resultSlotIndex + 1; slotIndex < container.outputSlotIndex; ++slotIndex) {
+            Slot slot = container.inventorySlots.get(slotIndex);
+            if (slot.getHasStack()) {
+                continue;
+            }
+            if (slot instanceof ItemSlot) {
+                ItemSlot iSlot = (ItemSlot) slot;
+                if (!iSlot.enabled) {
                     continue;
                 }
-                if(slot instanceof ItemSlot) {
-                    ItemSlot iSlot = (ItemSlot) slot;
-                    if(!iSlot.enabled) {
-                        continue;
-                    }
-                    ItemStack fakeStack = new ItemStack(iSlot.lockedItem, 1);
-                    if(!ghostItems) {
-                        RenderSystem.pushMatrix();
-                        RenderSystem.translatef(this.guiLeft, this.guiTop, 0.0F);
-                        //RenderSystem.enableRescaleNormal();
-                        ghostItems = true;
-                    }
-                    RenderSystem.depthFunc(515);
-                    itemRenderer.renderItemIntoGUI(fakeStack, slot.xPos, slot.yPos);
-                    RenderSystem.depthFunc(516);
-                    int alpha = (int) (0.7 * 0xff);
-                    int red = 0x8b;
-                    int blue = 0x8b;
-                    int green = 0x8b;
-                    int color = ((alpha * 0x100 + red)*0x100 + blue)*0x100 + green;
-                    AbstractGui.fill(slot.xPos, slot.yPos, slot.xPos + 16, slot.yPos+ 16, color);
+                ItemStack fakeStack = new ItemStack(iSlot.lockedItem, 1);
+                if (!ghostItems) {
+                    RenderSystem.pushMatrix();
+                    RenderSystem.translatef(this.guiLeft, this.guiTop, 0.0F);
+                    //RenderSystem.enableRescaleNormal();
+                    ghostItems = true;
                 }
-            }
-            if(ghostItems) {
                 RenderSystem.depthFunc(515);
-                RenderSystem.popMatrix();
+                itemRenderer.renderItemIntoGUI(fakeStack, slot.xPos, slot.yPos);
+                RenderSystem.depthFunc(516);
+                int alpha = (int) (0.7 * 0xff);
+                int red = 0x8b;
+                int blue = 0x8b;
+                int green = 0x8b;
+                int color = ((alpha * 0x100 + red) * 0x100 + blue) * 0x100 + green;
+                AbstractGui.fill(slot.xPos, slot.yPos, slot.xPos + 15, slot.yPos + 15, color);
             }
+        }
+        if (ghostItems) {
+            RenderSystem.depthFunc(515);
+            RenderSystem.popMatrix();
         }
 
         recipeBookGui.renderGhostRecipe(guiLeft, guiTop, true, partialTicks);
@@ -146,7 +159,43 @@ public class FactoryScreen extends ContainerScreen<FactoryContainer> {
     @Override
     protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
         GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-        minecraft.getTextureManager().bindTexture(enabled ? GUI_ON : GUI_OFF);
-        blit(guiLeft, guiTop, 0, 0, xSize, ySize);
+        minecraft.getTextureManager().bindTexture(GUI_MAP);
+        blit(guiLeft, guiTop, 0, 0, 0, xSize, ySize, 256, 256);
+        renderSlotsBackgrounds();
+    }
+
+    private void renderSlotsBackgrounds() {
+        List<Slot> normalSlots = new Stack<>();
+        List<Slot> disabledSlots = new Stack<>();
+        if (enabled) {
+            for (int slotIndex = 0; slotIndex <= container.outputSlotIndex; ++slotIndex) {
+                Slot slot = container.inventorySlots.get(slotIndex);
+                if (slot instanceof ReceiptSlot) {
+                    disabledSlots.add(slot);
+                } else if (slot instanceof ItemSlot) {
+                    if(((ItemSlot) slot).enabled) {
+                        normalSlots.add(slot);
+                    } else {
+                        disabledSlots.add(slot);
+                    }
+                }
+            }
+        } else {
+            for (int slotIndex = 0; slotIndex <= container.resultSlotIndex; ++slotIndex) {
+                normalSlots.add(container.inventorySlots.get(slotIndex));
+            }
+        }
+        RenderSystem.pushMatrix();
+        RenderSystem.translatef(guiLeft - 1, guiTop - 1, 0.0F);
+        minecraft.getTextureManager().bindTexture(GUI_MAP);
+        for(Slot slot : disabledSlots)  {
+            // slot off: 151, 16, 18, 18
+            blit(slot.xPos, slot.yPos, 151, 16, 18, 18);
+        }
+        for(Slot slot : normalSlots) {
+            // slot on: 152, 83, 18, 18
+            blit(slot.xPos, slot.yPos, 152, 83, 18, 18);
+        }
+        RenderSystem.popMatrix();
     }
 }

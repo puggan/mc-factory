@@ -5,6 +5,7 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
 
+
 public class ReceiptSlot extends Slot {
     public boolean locked = false;
     public ReceiptSlot(IInventory inventoryIn, int index, int xPosition, int yPosition, boolean locked) {
@@ -31,4 +32,5 @@ public class ReceiptSlot extends Slot {
     public boolean isEnabled() {
         return !locked || getHasStack();
     }
+
 }
