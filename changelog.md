@@ -2,7 +2,7 @@
 ## v1.1.0
 * Ghost items in inputs-slots, so you know what goes where.
 * Graphical update of slot status, see what slots are open/enabled.
-* Alot of client/server sync issues solved
+* A lot of client/server sync issues solved
 
 ## v1.0.1
 * Bugfix: server-side crash
