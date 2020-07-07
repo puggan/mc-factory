@@ -23,7 +23,7 @@ public class IntPair implements Comparable<IntPair> {
     public static int[] aArray(Collection<IntPair> list) {
         int[] array = new int[list.size()];
         int index = 0;
-        for(IntPair ip : list) {
+        for (IntPair ip : list) {
             array[index++] = ip.a;
         }
         return array;

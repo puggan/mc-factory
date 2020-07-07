@@ -4,13 +4,20 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.widget.button.ImageButton;
 
-public class EnabledButton extends ImageButton /*implements Button.IPressable*/ {
+public class EnabledButton extends ImageButton {
     public boolean enabled;
     private final Runnable onFunction;
     private final Runnable offFunction;
 
     public EnabledButton(int xIn, int yIn, boolean enabled, Runnable onPress, Runnable offPress) {
-        super(xIn, yIn, 20, 18, 177, 0, 19, FactoryScreen.GUI_MAP, (button) -> {});
+        super(
+                xIn, yIn,
+                20, 18,
+                177, 0,
+                19,
+                FactoryScreen.GUI_MAP, (button) -> {
+                }
+        );
         this.enabled = enabled;
         onFunction = onPress;
         offFunction = offPress;
@@ -18,7 +25,7 @@ public class EnabledButton extends ImageButton /*implements Button.IPressable*/ 
 
     @Override
     public void onPress() {
-        if(enabled) {
+        if (enabled) {
             enabled = false;
             offFunction.run();
             return;

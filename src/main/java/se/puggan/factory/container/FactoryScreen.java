@@ -2,6 +2,8 @@ package se.puggan.factory.container;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import java.util.List;
+import java.util.Stack;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.recipebook.RecipeBookGui;
 import net.minecraft.client.gui.screen.inventory.ContainerScreen;
@@ -12,12 +14,8 @@ import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
-import se.puggan.factory.Factory;
 import se.puggan.factory.container.slot.ItemSlot;
 import se.puggan.factory.container.slot.ReceiptSlot;
-
-import java.util.List;
-import java.util.Stack;
 
 public class FactoryScreen extends ContainerScreen<FactoryContainer> {
     /**
@@ -132,7 +130,6 @@ public class FactoryScreen extends ContainerScreen<FactoryContainer> {
                 if (!ghostItems) {
                     RenderSystem.pushMatrix();
                     RenderSystem.translatef(this.guiLeft, this.guiTop, 0.0F);
-                    //RenderSystem.enableRescaleNormal();
                     ghostItems = true;
                 }
                 RenderSystem.depthFunc(515);
@@ -162,7 +159,7 @@ public class FactoryScreen extends ContainerScreen<FactoryContainer> {
      */
     protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
         font.drawString(title.getFormattedText(), 8.0F, 6.0F, 4210752);
-        font.drawString(playerInventory.getDisplayName().getFormattedText(), 8.0F, (float)(ySize - 96 + 2), 4210752);
+        font.drawString(playerInventory.getDisplayName().getFormattedText(), 8.0F, (float) (ySize - 96 + 2), 4210752);
     }
 
     @Override
@@ -182,7 +179,7 @@ public class FactoryScreen extends ContainerScreen<FactoryContainer> {
                 if (slot instanceof ReceiptSlot) {
                     disabledSlots.add(slot);
                 } else if (slot instanceof ItemSlot) {
-                    if(((ItemSlot) slot).enabled) {
+                    if (((ItemSlot) slot).enabled) {
                         normalSlots.add(slot);
                     } else {
                         disabledSlots.add(slot);
@@ -197,11 +194,11 @@ public class FactoryScreen extends ContainerScreen<FactoryContainer> {
         RenderSystem.pushMatrix();
         RenderSystem.translatef(guiLeft - 1, guiTop - 1, 0.0F);
         minecraft.getTextureManager().bindTexture(GUI_MAP);
-        for(Slot slot : disabledSlots)  {
+        for (Slot slot : disabledSlots) {
             // slot off: 151, 16, 18, 18
             blit(slot.xPos, slot.yPos, 151, 16, 18, 18);
         }
-        for(Slot slot : normalSlots) {
+        for (Slot slot : normalSlots) {
             // slot on: 152, 83, 18, 18
             blit(slot.xPos, slot.yPos, 152, 83, 18, 18);
         }

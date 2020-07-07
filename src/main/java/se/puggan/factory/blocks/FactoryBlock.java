@@ -1,6 +1,10 @@
 package se.puggan.factory.blocks;
 
-import net.minecraft.block.*;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockRenderType;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.ContainerBlock;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.InventoryHelper;
@@ -18,7 +22,6 @@ import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
-import se.puggan.factory.Factory;
 import se.puggan.factory.container.FactoryEntity;
 
 import javax.annotation.Nonnull;
@@ -71,11 +74,11 @@ public class FactoryBlock extends ContainerBlock {
         if (state.getBlock() != newState.getBlock()) {
             TileEntity tileentity = worldIn.getTileEntity(pos);
             if (tileentity instanceof IInventory) {
-                if(tileentity instanceof FactoryEntity) {
+                if (tileentity instanceof FactoryEntity) {
                     // don't drop crafting exemple
-                    ((FactoryEntity)tileentity).removeStackFromSlot(9);
+                    ((FactoryEntity) tileentity).removeStackFromSlot(9);
                 }
-                InventoryHelper.dropInventoryItems(worldIn, pos, (IInventory)tileentity);
+                InventoryHelper.dropInventoryItems(worldIn, pos, (IInventory) tileentity);
                 worldIn.updateComparatorOutputLevel(pos, this);
             }
 
@@ -86,7 +89,7 @@ public class FactoryBlock extends ContainerBlock {
     public void tick(BlockState state, ServerWorld worldIn, BlockPos pos, Random rand) {
         TileEntity tileentity = worldIn.getTileEntity(pos);
         if (tileentity instanceof FactoryEntity) {
-            ((FactoryEntity)tileentity).tick();
+            ((FactoryEntity) tileentity).tick();
         }
     }
 

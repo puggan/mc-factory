@@ -3,7 +3,6 @@ package se.puggan.factory.container.slot;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.inventory.container.Slot;
 
 /**

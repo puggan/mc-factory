@@ -10,6 +10,7 @@ import net.minecraft.item.ItemStack;
  */
 public class ReceiptSlot extends Slot {
     public boolean locked;
+
     public ReceiptSlot(IInventory inventoryIn, int index, int xPosition, int yPosition, boolean locked) {
         super(inventoryIn, index, xPosition, yPosition);
         this.locked = locked;

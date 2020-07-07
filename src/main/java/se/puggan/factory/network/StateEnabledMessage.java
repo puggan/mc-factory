@@ -1,20 +1,16 @@
 package se.puggan.factory.network;
 
+import java.util.function.Supplier;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.inventory.container.INamedContainerProvider;
-import net.minecraft.item.ItemStack;
+import net.minecraftforge.fml.network.NetworkEvent;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.network.NetworkEvent;
-import se.puggan.factory.Factory;
 import se.puggan.factory.blocks.FactoryBlock;
 import se.puggan.factory.container.FactoryContainer;
 import se.puggan.factory.container.FactoryEntity;
-
-import java.util.function.Supplier;
+import se.puggan.factory.Factory;
 
 public class StateEnabledMessage extends NetworkMessage {
     private BlockPos pos;
