@@ -1,0 +1,9 @@
+name: x, y, w, h.
+background: 0, 0, 176, 166
+slot off: 151, 16, 18, 18
+slot on: 152, 83, 18, 18
+Green button: 177, 0, 20, 18
+Green pressed button: 177, 19, 20, 18
+Red button: 198, 0, 20, 18
+Red pressed button: 198, 19, 20, 18
+

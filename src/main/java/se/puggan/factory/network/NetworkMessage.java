@@ -1,9 +1,8 @@
 package se.puggan.factory.network;
 
-import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.fml.network.NetworkEvent;
-
 import java.util.function.Supplier;
+import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.network.PacketBuffer;
 
 abstract public class NetworkMessage {
     // BiConsumer<MSG, PacketBuffer>

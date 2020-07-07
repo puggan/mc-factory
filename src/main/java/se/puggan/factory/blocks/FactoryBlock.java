@@ -1,6 +1,10 @@
 package se.puggan.factory.blocks;
 
-import net.minecraft.block.*;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockRenderType;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.ContainerBlock;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.InventoryHelper;
@@ -64,18 +68,17 @@ public class FactoryBlock extends ContainerBlock {
         return ActionResultType.SUCCESS;
     }
 
-
     @Override
     @Deprecated
     public void onReplaced(BlockState state, World worldIn, BlockPos pos, BlockState newState, boolean isMoving) {
         if (state.getBlock() != newState.getBlock()) {
             TileEntity tileentity = worldIn.getTileEntity(pos);
             if (tileentity instanceof IInventory) {
-                if(tileentity instanceof FactoryEntity) {
+                if (tileentity instanceof FactoryEntity) {
                     // don't drop crafting exemple
-                    ((FactoryEntity)tileentity).removeStackFromSlot(9);
+                    ((FactoryEntity) tileentity).removeStackFromSlot(9);
                 }
-                InventoryHelper.dropInventoryItems(worldIn, pos, (IInventory)tileentity);
+                InventoryHelper.dropInventoryItems(worldIn, pos, (IInventory) tileentity);
                 worldIn.updateComparatorOutputLevel(pos, this);
             }
 
@@ -86,7 +89,7 @@ public class FactoryBlock extends ContainerBlock {
     public void tick(BlockState state, ServerWorld worldIn, BlockPos pos, Random rand) {
         TileEntity tileentity = worldIn.getTileEntity(pos);
         if (tileentity instanceof FactoryEntity) {
-            ((FactoryEntity)tileentity).tick();
+            ((FactoryEntity) tileentity).tick();
         }
     }
 

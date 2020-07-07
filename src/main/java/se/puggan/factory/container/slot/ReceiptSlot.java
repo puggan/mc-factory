@@ -5,8 +5,12 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
 
+/**
+ * A lockable ItemSlot with max stack-size of 1
+ */
 public class ReceiptSlot extends Slot {
-    public boolean locked = false;
+    public boolean locked;
+
     public ReceiptSlot(IInventory inventoryIn, int index, int xPosition, int yPosition, boolean locked) {
         super(inventoryIn, index, xPosition, yPosition);
         this.locked = locked;
@@ -26,4 +30,10 @@ public class ReceiptSlot extends Slot {
     public boolean canTakeStack(PlayerEntity playerIn) {
         return !locked;
     }
+
+    @Override
+    public boolean isEnabled() {
+        return !locked || getHasStack();
+    }
+
 }
