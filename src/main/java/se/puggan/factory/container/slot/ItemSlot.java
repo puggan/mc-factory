@@ -7,6 +7,9 @@ import net.minecraft.item.ItemStack;
 
 import javax.annotation.Nullable;
 
+/**
+ * A slot for a specific item, No other items can be put here
+ */
 public class ItemSlot extends Slot {
     public Item lockedItem = null;
     public boolean enabled;

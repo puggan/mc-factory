@@ -6,8 +6,10 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.inventory.container.Slot;
 
+/**
+ * Slot is always locked, the item can not be changed by user
+ */
 public class LockedSlot extends Slot {
-    public static final ResourceLocation GUI = new ResourceLocation("factory", "textures/gui/slot_off_256.png");
     public boolean enabled;
 
     public LockedSlot(IInventory inventory, int index, int xPosition, int yPosition, boolean enabled) {

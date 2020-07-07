@@ -3,12 +3,15 @@ package se.puggan.factory.network;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.container.INamedContainerProvider;
+import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.network.NetworkEvent;
 import se.puggan.factory.Factory;
 import se.puggan.factory.blocks.FactoryBlock;
+import se.puggan.factory.container.FactoryContainer;
 import se.puggan.factory.container.FactoryEntity;
 
 import java.util.function.Supplier;
@@ -37,7 +40,7 @@ public class StateEnabledMessage extends NetworkMessage {
     public void handle(Supplier<NetworkEvent.Context> contextSupplier) {
         NetworkEvent.Context contextPromise = contextSupplier.get();
         ServerPlayerEntity player = contextPromise.getSender();
-        if(player == null) {
+        if (player == null) {
             Factory.LOGGER.error("StateEnabledMessage.handle() no sender");
             return;
         }
@@ -47,29 +50,30 @@ public class StateEnabledMessage extends NetworkMessage {
             return;
         }
 
+        if (!(player.openContainer instanceof FactoryContainer)) {
+            Factory.LOGGER.error("StateEnabledMessage.handle() Container not opened");
+            return;
+        }
+        FactoryContainer fc = (FactoryContainer) player.openContainer;
+        FactoryEntity fi = fc.fInventory;
+
+        if (pos.equals(BlockPos.ZERO)) {
+            pos = fi.getPos();
+        }
+
         BlockState bs = world.getBlockState(pos);
-        if (!enabled) {
-            world.setBlockState(pos, bs.with(FactoryBlock.enabledProperty, false));
-            contextPromise.setPacketHandled(true);
-            return;
-        }
-
-        INamedContainerProvider entity = bs.getContainer(world, pos);
-
-        if (!(entity instanceof FactoryEntity)) {
-            Factory.LOGGER.error("StateEnabledMessage.handle() position dosn't contain a FactoryEntity");
-            return;
-        }
-        FactoryEntity fInvetory = (FactoryEntity) entity;
-
-        if (fInvetory.getRecipeRL() == null) {
-            Factory.LOGGER.error("StateEnabledMessage.handle() position dosn't have a recipe");
-            (new SetRecipeUsedMessage(pos, null)).sendToPlayer(player);
-            return;
+        if (!bs.has(FactoryBlock.enabledProperty)) {
+            Factory.LOGGER.error("StateEnabledMessage.handle() bad BS at " + pos.toString());
         }
 
         world.setBlockState(pos, bs.with(FactoryBlock.enabledProperty, enabled));
+
+        fc.updateEnabled(false);
+
         contextPromise.setPacketHandled(true);
-        fInvetory.container.updateEnabled(false);
+    }
+
+    public static void sendToServer(BlockPos pos, boolean enabled) {
+        FactoryNetwork.CHANNEL.sendToServer(new StateEnabledMessage(pos, enabled));
     }
 }

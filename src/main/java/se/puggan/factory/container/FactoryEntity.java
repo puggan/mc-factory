@@ -1,6 +1,7 @@
 package se.puggan.factory.container;
 
 import net.minecraft.block.BlockState;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.*;
 import net.minecraft.inventory.container.Container;
@@ -8,6 +9,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.ICraftingRecipe;
 import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.item.crafting.IRecipeType;
 import net.minecraft.item.crafting.RecipeItemHelper;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.state.BooleanProperty;
@@ -15,7 +17,7 @@ import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.LockableLootTileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.NonNullList;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
@@ -23,7 +25,6 @@ import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.CapabilityItemHandler;
 import se.puggan.factory.Factory;
 import se.puggan.factory.blocks.FactoryBlock;
-import se.puggan.factory.container.slot.IInventorySender;
 import se.puggan.factory.util.IntPair;
 import se.puggan.factory.util.RegistryHandler;
 
@@ -34,19 +35,18 @@ import java.util.Optional;
 import java.util.TreeSet;
 
 // implements ISidedInventory
-public class FactoryEntity extends LockableLootTileEntity implements ITickableTileEntity, IRecipeHolder, IRecipeHelperPopulator, IInventorySender, ISidedInventory {
+public class FactoryEntity extends LockableLootTileEntity implements ITickableTileEntity, IRecipeHolder, IRecipeHelperPopulator, ISidedInventory {
+    public static final int resultSlotIndex = 9;
+    public static final int outputSlotIndex = 19;
     public final int SIZE = 20;
     private NonNullList<ItemStack> content = NonNullList.withSize(SIZE, ItemStack.EMPTY);
-    private ICraftingRecipe recipt;
-    private ResourceLocation reciptRL;
+    private ICraftingRecipe recipe;
     private int timer;
     private boolean valid;
     private boolean accept;
-    public FactoryContainer container;
 
     public FactoryEntity() {
         super(RegistryHandler.FACTORY_ENTITY.get());
-        recipt = null;
     }
 
     @Override
@@ -71,29 +71,19 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
             int windowId,
             @Nullable PlayerInventory playerInventory
     ) {
-        this.container = new FactoryContainer(windowId, playerInventory, this);
-        return this.container;
+        return new FactoryContainer(windowId, playerInventory, this);
     }
 
     public CompoundNBT write(CompoundNBT compound) {
         super.write(compound);
-        if (!this.checkLootAndWrite(compound)) {
-            ItemStackHelper.saveAllItems(compound, content);
-        }
-        compound.putString("recipt", reciptRL == null ? "" : reciptRL.toString());
+        ItemStackHelper.saveAllItems(compound, content);
         return compound;
     }
 
     public void read(CompoundNBT compound) {
         super.read(compound);
         content = NonNullList.withSize(this.getSizeInventory(), ItemStack.EMPTY);
-        if (!this.checkLootAndRead(compound)) {
-            ItemStackHelper.loadAllItems(compound, content);
-        }
-        reciptRL = new ResourceLocation(compound.getString("recipt"));
-        if(world != null) {
-            setRecipeUsed(world, reciptRL);
-        }
+        ItemStackHelper.loadAllItems(compound, content);
     }
 
     @Nullable
@@ -156,10 +146,6 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
             accept = false;
             return false;
         }
-        if(recipt == null) {
-            accept = false;
-            return false;
-        }
 
         BlockState blockState = world.getBlockState(pos);
         if(!blockState.get(FactoryBlock.loadedProperty)) {
@@ -171,13 +157,21 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
             return false;
         }
 
+        if(recipe == null) {
+            recipe = calculateRecipe();
+            if(recipe == null) {
+                accept = false;
+                return false;
+            }
+        }
+
         CraftingInventory ci = new CraftingInventory(new DummyContainer(), 3, 3);
         for(int i = 0; i < 9; i++) {
             ci.setInventorySlotContents(i, content.get(i));
         }
-        if(!recipt.matches(ci, world)) {
-            recipt = null;
-            reciptRL = null;
+
+        if(!recipe.matches(ci, world)) {
+            recipe = null;
             accept = false;
             return false;
         }
@@ -187,7 +181,8 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
         for(int i = 0; i < 9; i++) {
             ci.setInventorySlotContents(i, content.get(i + 10));
         }
-        return recipt.matches(ci, world);
+
+        return recipe.matches(ci, world);
     }
 
     private boolean doCrafting() {
@@ -224,40 +219,55 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
         return true;
     }
 
-    public void setRecipeUsed(@Nonnull World world, @Nonnull ResourceLocation recipt) {
-        reciptRL = recipt;
-        if(recipt.getPath().length() <= 0) {
-            setRecipeUsed(null);
-            return;
-        }
-
-        Optional<? extends IRecipe<?>> optionalIRecipe = world.getRecipeManager().getRecipe(recipt);
-        if (!optionalIRecipe.isPresent()) {
-            Factory.LOGGER.error("setRecipeUsed() failed " + recipt);
-            return;
-        }
-
-        setRecipeUsed(optionalIRecipe.get());
-    }
-
     @Override
-    public void setRecipeUsed(@Nullable IRecipe<?> newRecipt) {
-        boolean loaded = newRecipt instanceof ICraftingRecipe;
-        reciptRL = loaded ? newRecipt.getId() : null;
-        recipt = loaded ? (ICraftingRecipe) newRecipt : null;
+    public void setRecipeUsed(@Nullable IRecipe<?> newRecipe) {
+        boolean loaded = newRecipe instanceof ICraftingRecipe;
+        recipe = loaded ? (ICraftingRecipe) newRecipe : null;
         if(world == null || world.isRemote) {
             return;
         }
         stateLoaded(loaded);
-        if(container != null) {
-            container.lockInput();
-        }
+        setInventorySlotContents(resultSlotIndex, loaded ? newRecipe.getRecipeOutput() : ItemStack.EMPTY);
     }
 
     @Nullable
     @Override
     public ICraftingRecipe getRecipeUsed() {
-        return recipt;
+        return recipe;
+    }
+
+    @Nullable
+    public ICraftingRecipe calculateRecipe() {
+        if(world == null) {
+            return null;
+        }
+
+        CraftingInventory ci = new CraftingInventory(new DummyContainer(), 3, 3);
+        for(int i = 0; i < 9; i++) {
+            ci.setInventorySlotContents(i, content.get(i));
+        }
+        if(recipe != null && recipe.matches(ci, world)) {
+            return recipe;
+        }
+
+        if(world.isRemote) {
+            return null;
+        }
+
+        Optional<ICraftingRecipe> optional = world.getRecipeManager().getRecipe(IRecipeType.CRAFTING, ci, world);
+        if (!optional.isPresent()) {
+            if (recipe != null) {
+                setRecipeUsed(null);
+            }
+            return null;
+        }
+
+        ICraftingRecipe newRecipe = optional.get();
+        if(newRecipe != recipe) {
+            setRecipeUsed(newRecipe);
+        }
+
+        return newRecipe;
     }
 
     @Override
@@ -267,14 +277,11 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
         }
     }
 
-    public ResourceLocation getRecipeRL() {
-        return reciptRL;
-    }
-
     @Override
     public void markDirty() {
         super.markDirty();
-        tellListners(this);
+        // TODO Needed?
+        //tellListners(this);
     }
 
     @Override
@@ -299,16 +306,17 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
 
     @Override
     public boolean canInsertItem(int index, ItemStack stack, @Nullable Direction direction) {
-        if(index < 10) {
+        if(index <= resultSlotIndex) {
             return false;
         }
-        if(index > 18) {
+        if(index >= outputSlotIndex) {
             return false;
         }
         if(!accept) {
             return false;
         }
-        ItemStack rStack = content.get(index - 10);
+        int offset = outputSlotIndex - resultSlotIndex;
+        ItemStack rStack = content.get(index - offset);
         Item item = stack.getItem();
         if(rStack.isEmpty() || rStack.getItem() != item) {
             return false;
@@ -322,10 +330,7 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
 
     @Override
     public boolean canExtractItem(int index, ItemStack stack, Direction direction) {
-        if(index != 19) {
-            return false;
-        }
-        return true;
+        return index == outputSlotIndex;
     }
 
     public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> cap, @Nullable Direction side) {
@@ -333,9 +338,5 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
             return LazyOptional.empty();
         }
         return super.getCapability(cap, side);
-    }
-
-    public void setContainer(FactoryContainer container) {
-        this.container = container;
     }
 }

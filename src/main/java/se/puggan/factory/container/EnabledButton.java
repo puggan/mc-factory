@@ -3,7 +3,6 @@ package se.puggan.factory.container;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.widget.button.ImageButton;
-import net.minecraft.util.ResourceLocation;
 
 public class EnabledButton extends ImageButton /*implements Button.IPressable*/ {
     public boolean enabled;

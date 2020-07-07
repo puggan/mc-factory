@@ -2,6 +2,10 @@ package se.puggan.factory.util;
 
 import java.util.Collection;
 
+/**
+ * A rpw for list of ints (a) sorted by another list of ints (b)
+ * for exemple useful as `TreSet<IntPair>`
+ */
 public class IntPair implements Comparable<IntPair> {
     private final int a;
     private final int b;

@@ -12,6 +12,7 @@ import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
+import se.puggan.factory.Factory;
 import se.puggan.factory.container.slot.ItemSlot;
 import se.puggan.factory.container.slot.ReceiptSlot;
 
@@ -45,7 +46,7 @@ public class FactoryScreen extends ContainerScreen<FactoryContainer> {
     public FactoryScreen(FactoryContainer container, PlayerInventory inv, ITextComponent name) {
         super(container, inv, name);
         fContainer = container;
-        fContainer.setScreen(this);
+        fContainer.addScreen(this);
         enabled = fContainer.isEnabled();
     }
 
@@ -117,7 +118,7 @@ public class FactoryScreen extends ContainerScreen<FactoryContainer> {
         super.render(mouseX, mouseY, partialTicks);
 
         boolean ghostItems = false;
-        for (int slotIndex = container.resultSlotIndex + 1; slotIndex < container.outputSlotIndex; ++slotIndex) {
+        for (int slotIndex = FactoryEntity.resultSlotIndex + 1; slotIndex < FactoryEntity.outputSlotIndex; ++slotIndex) {
             Slot slot = container.inventorySlots.get(slotIndex);
             if (slot.getHasStack()) {
                 continue;
@@ -156,6 +157,14 @@ public class FactoryScreen extends ContainerScreen<FactoryContainer> {
         func_212932_b(recipeBookGui);
     }
 
+    /**
+     * Draw the foreground layer for the GuiContainer (everything in front of the items)
+     */
+    protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
+        font.drawString(title.getFormattedText(), 8.0F, 6.0F, 4210752);
+        font.drawString(playerInventory.getDisplayName().getFormattedText(), 8.0F, (float)(ySize - 96 + 2), 4210752);
+    }
+
     @Override
     protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
         GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
@@ -168,7 +177,7 @@ public class FactoryScreen extends ContainerScreen<FactoryContainer> {
         List<Slot> normalSlots = new Stack<>();
         List<Slot> disabledSlots = new Stack<>();
         if (enabled) {
-            for (int slotIndex = 0; slotIndex <= container.outputSlotIndex; ++slotIndex) {
+            for (int slotIndex = 0; slotIndex <= FactoryEntity.outputSlotIndex; ++slotIndex) {
                 Slot slot = container.inventorySlots.get(slotIndex);
                 if (slot instanceof ReceiptSlot) {
                     disabledSlots.add(slot);
@@ -181,7 +190,7 @@ public class FactoryScreen extends ContainerScreen<FactoryContainer> {
                 }
             }
         } else {
-            for (int slotIndex = 0; slotIndex <= container.resultSlotIndex; ++slotIndex) {
+            for (int slotIndex = 0; slotIndex <= FactoryEntity.resultSlotIndex; ++slotIndex) {
                 normalSlots.add(container.inventorySlots.get(slotIndex));
             }
         }

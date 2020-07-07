@@ -18,6 +18,7 @@ import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
+import se.puggan.factory.Factory;
 import se.puggan.factory.container.FactoryEntity;
 
 import javax.annotation.Nonnull;
@@ -63,7 +64,6 @@ public class FactoryBlock extends ContainerBlock {
         player.openContainer(container);
         return ActionResultType.SUCCESS;
     }
-
 
     @Override
     @Deprecated
