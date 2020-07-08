@@ -1,8 +1,8 @@
 package se.puggan.factory.network;
 
-import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.network.NetworkRegistry;
 import net.minecraftforge.fml.network.simple.SimpleChannel;
+import net.minecraft.util.ResourceLocation;
 import se.puggan.factory.Factory;
 
 public class FactoryNetwork {

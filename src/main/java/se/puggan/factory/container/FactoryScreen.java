@@ -1,7 +1,6 @@
 package se.puggan.factory.container;
 
 import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
 import java.util.List;
 import java.util.Stack;
 import net.minecraft.client.gui.AbstractGui;
@@ -16,6 +15,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import se.puggan.factory.container.slot.ItemSlot;
 import se.puggan.factory.container.slot.ReceiptSlot;
+
 
 public class FactoryScreen extends ContainerScreen<FactoryContainer> {
     /**
@@ -128,13 +128,13 @@ public class FactoryScreen extends ContainerScreen<FactoryContainer> {
                 }
                 ItemStack fakeStack = new ItemStack(iSlot.lockedItem, 1);
                 if (!ghostItems) {
-                    RenderSystem.pushMatrix();
-                    RenderSystem.translatef(this.guiLeft, this.guiTop, 0.0F);
+                    GlStateManager.pushMatrix();
+                    GlStateManager.translatef(this.guiLeft, this.guiTop, 0.0F);
                     ghostItems = true;
                 }
-                RenderSystem.depthFunc(515);
+                GlStateManager.depthFunc(515);
                 itemRenderer.renderItemIntoGUI(fakeStack, slot.xPos, slot.yPos);
-                RenderSystem.depthFunc(516);
+                GlStateManager.depthFunc(516);
                 int alpha = (int) (0.7 * 0xff);
                 int red = 0x8b;
                 int blue = 0x8b;
@@ -144,8 +144,8 @@ public class FactoryScreen extends ContainerScreen<FactoryContainer> {
             }
         }
         if (ghostItems) {
-            RenderSystem.depthFunc(515);
-            RenderSystem.popMatrix();
+            GlStateManager.depthFunc(515);
+            GlStateManager.popMatrix();
         }
 
         recipeBookGui.renderGhostRecipe(guiLeft, guiTop, true, partialTicks);
@@ -191,8 +191,8 @@ public class FactoryScreen extends ContainerScreen<FactoryContainer> {
                 normalSlots.add(container.inventorySlots.get(slotIndex));
             }
         }
-        RenderSystem.pushMatrix();
-        RenderSystem.translatef(guiLeft - 1, guiTop - 1, 0.0F);
+        GlStateManager.pushMatrix();
+        GlStateManager.translatef(guiLeft - 1, guiTop - 1, 0.0F);
         minecraft.getTextureManager().bindTexture(GUI_MAP);
         for (Slot slot : disabledSlots) {
             // slot off: 151, 16, 18, 18
@@ -202,6 +202,6 @@ public class FactoryScreen extends ContainerScreen<FactoryContainer> {
             // slot on: 152, 83, 18, 18
             blit(slot.xPos, slot.yPos, 152, 83, 18, 18);
         }
-        RenderSystem.popMatrix();
+        GlStateManager.popMatrix();
     }
 }

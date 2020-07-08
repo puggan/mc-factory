@@ -1,9 +1,9 @@
 package se.puggan.factory.container;
 
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.ContainerType;
+import net.minecraft.inventory.IInventory;
 
 public class DummyContainer extends Container {
     protected DummyContainer() {

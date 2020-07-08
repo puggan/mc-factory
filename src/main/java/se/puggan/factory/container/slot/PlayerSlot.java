@@ -1,7 +1,7 @@
 package se.puggan.factory.container.slot;
 
-import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.container.Slot;
+import net.minecraft.inventory.IInventory;
 
 /**
  * A Wraper for Plauers inventory slots, so we can use instanceOf to check it its a player slot.

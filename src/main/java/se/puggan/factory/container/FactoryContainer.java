@@ -24,7 +24,11 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.BlockPos;
 import se.puggan.factory.blocks.FactoryBlock;
-import se.puggan.factory.container.slot.*;
+import se.puggan.factory.container.slot.HiddenSlot;
+import se.puggan.factory.container.slot.ItemSlot;
+import se.puggan.factory.container.slot.LockedSlot;
+import se.puggan.factory.container.slot.PlayerSlot;
+import se.puggan.factory.container.slot.ReceiptSlot;
 import se.puggan.factory.Factory;
 import se.puggan.factory.network.StateEnabledMessage;
 import se.puggan.factory.util.RegistryHandler;
@@ -49,7 +53,8 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> {
         fInventory = (FactoryEntity) inventory;
         // TODO why is fInventory.getPos() BlockPos.ZERO in the client
         if (playerInventory.player.world.isRemote) {
-            fInventory.setWorldAndPos(FactoryBlock.lastWorld, FactoryBlock.lastBlockPosition);
+            fInventory.setWorld(FactoryBlock.lastWorld);
+            fInventory.setPos(FactoryBlock.lastBlockPosition);
             FactoryBlock.lastWorld = null;
             FactoryBlock.lastBlockPosition = null;
         }
@@ -122,7 +127,8 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> {
     }
 
     @Override
-    public void fillStackedContents(@Nonnull RecipeItemHelper itemHelper) {
+    // MCP-name: func_201771_a -> fillStackedContents
+    public void func_201771_a(@Nonnull RecipeItemHelper itemHelper) {
         for (int index = 0; index < FactoryEntity.resultSlotIndex; ++index) {
             ItemStack itemstack = fInventory.getStackInSlot(index);
             itemHelper.accountPlainStack(itemstack);

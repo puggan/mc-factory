@@ -1,8 +1,8 @@
 package se.puggan.factory.container;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.Minecraft;
+import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.gui.widget.button.ImageButton;
+import net.minecraft.client.Minecraft;
 
 public class EnabledButton extends ImageButton {
     public boolean enabled;
@@ -44,11 +44,11 @@ public class EnabledButton extends ImageButton {
          * Red button: 198, 0, 20, 18
          * Red pressed button: 198, 19, 20, 18
          */
-        RenderSystem.disableDepthTest();
+        GlStateManager.disableDepthTest();
         float textureX = enabled ? 177 : 198;
         float textureY = isHovered() ? 19 : 0;
 
         blit(x, y, textureX, textureY, width, height, 256, 256);
-        RenderSystem.enableDepthTest();
+        GlStateManager.enableDepthTest();
     }
 }

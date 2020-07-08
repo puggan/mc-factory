@@ -10,8 +10,12 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.CapabilityItemHandler;
-import net.minecraft.inventory.*;
 import net.minecraft.inventory.container.Container;
+import net.minecraft.inventory.CraftingInventory;
+import net.minecraft.inventory.IRecipeHelperPopulator;
+import net.minecraft.inventory.IRecipeHolder;
+import net.minecraft.inventory.ISidedInventory;
+import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.crafting.ICraftingRecipe;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.item.crafting.IRecipeType;
@@ -115,6 +119,16 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
     @Override
     public int getSizeInventory() {
         return SIZE;
+    }
+
+    @Override
+    public boolean isEmpty() {
+        for(ItemStack stack : content) {
+            if(!stack.isEmpty()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override

@@ -1,9 +1,9 @@
 package se.puggan.factory.container.slot;
 
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.container.Slot;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.inventory.container.Slot;
 
 /**
  * Slot is always locked, the item can not be changed by user

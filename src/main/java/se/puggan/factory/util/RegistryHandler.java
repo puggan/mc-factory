@@ -2,22 +2,22 @@ package se.puggan.factory.util;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.gui.ScreenManager;
-import net.minecraft.inventory.container.ContainerType;
-import net.minecraft.item.Item;
-import net.minecraft.tileentity.TileEntityType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.extensions.IForgeContainerType;
 import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
-import se.puggan.factory.Factory;
+import net.minecraft.inventory.container.ContainerType;
+import net.minecraft.item.Item;
+import net.minecraft.tileentity.TileEntityType;
 import se.puggan.factory.blocks.FactoryBlock;
 import se.puggan.factory.container.FactoryContainer;
 import se.puggan.factory.container.FactoryEntity;
 import se.puggan.factory.container.FactoryScreen;
+import se.puggan.factory.Factory;
 import se.puggan.factory.items.FactoryItem;
 import se.puggan.factory.network.FactoryNetwork;
 
