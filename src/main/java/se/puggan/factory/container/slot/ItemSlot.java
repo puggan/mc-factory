@@ -1,10 +1,10 @@
 package se.puggan.factory.container.slot;
 
-import javax.annotation.Nullable;
-import net.minecraft.inventory.container.Slot;
-import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.Inventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.screen.slot.Slot;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * A slot for a specific item, No other items can be put here
@@ -13,18 +13,18 @@ public class ItemSlot extends Slot {
     public Item lockedItem = null;
     public boolean enabled;
 
-    public ItemSlot(IInventory inventoryIn, int index, int xPosition, int yPosition, boolean enabled) {
+    public ItemSlot(Inventory inventoryIn, int index, int xPosition, int yPosition, boolean enabled) {
         super(inventoryIn, index, xPosition, yPosition);
         this.enabled = enabled;
     }
 
     @Override
-    public boolean isEnabled() {
+    public boolean doDrawHoveringEffect() {
         return enabled;
     }
 
     @Override
-    public boolean isItemValid(ItemStack stack) {
+    public boolean canInsert(ItemStack stack) {
         return lockedItem != null && stack.getItem() == lockedItem;
     }
 
