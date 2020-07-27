@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "factory",
+  "version": "${version}",
+
+  "name": "Factory",
+  "description": "Adds the factory-block.\nThe factory-block works as a workbench, but can be loaded and unloaded with hoppers.",
+  "authors": [
+    "Puggan Sundragon"
+  ],
+  "contact": {
+    "homepage": "https://github.com/puggan/mc-factory",
+    "sources": "https://github.com/puggan/mc-factory"
+  },
+
+  "license": "MIT",
+  "icon": "assets/modid/icon.png",
+
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "se.puggan.factory.Factory"
+    ]
+  },
+  "mixins": [
+  ],
+
+  "depends": {
+    "fabricloader": ">=0.7.4",
+    "fabric": "*",
+    "minecraft": "1.16.x"
+  },
+  "suggests": {
+    "flamingo": "*"
+  }
+}
