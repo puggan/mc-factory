@@ -1,44 +1,41 @@
 package se.puggan.factory.blocks;
 
+import java.util.Random;
+import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.BlockWithEntity;
 import net.minecraft.block.Blocks;
-import net.minecraft.block.ContainerBlock;
+import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.InventoryHelper;
-import net.minecraft.inventory.container.INamedContainerProvider;
-import net.minecraft.state.BooleanProperty;
-import net.minecraft.state.StateContainer;
-import net.minecraft.state.properties.BlockStateProperties;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ActionResultType;
+import net.minecraft.inventory.Inventory;
+import net.minecraft.screen.NamedScreenHandlerFactory;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.state.StateManager;
+import net.minecraft.state.property.BooleanProperty;
+import net.minecraft.state.property.Properties;
+import net.minecraft.text.TranslatableText;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
+import net.minecraft.util.ItemScatterer;
+import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.IBlockReader;
+import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
 import se.puggan.factory.container.FactoryEntity;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.Random;
-
-public class FactoryBlock extends ContainerBlock {
-    public static final ITextComponent menuTitle = new TranslationTextComponent("container.factory");
-    public static final BooleanProperty loadedProperty = BooleanProperty.create("loaded");
-    public static final BooleanProperty enabledProperty = BlockStateProperties.ENABLED;
-    public static final BooleanProperty openProperty = BlockStateProperties.OPEN;
+public class FactoryBlock extends BlockWithEntity {
+    public static final TranslatableText menuTitle = new TranslatableText("container.factory");
+    public static final BooleanProperty loadedProperty = BooleanProperty.of("loaded");
+    public static final BooleanProperty enabledProperty = Properties.ENABLED;
+    public static final BooleanProperty openProperty = Properties.OPEN;
 
     public static World lastWorld;
     public static BlockPos lastBlockPosition;
 
     public FactoryBlock() {
-        super(Properties.from(Blocks.CRAFTING_TABLE));
+        super(AbstractBlock.Settings.copy(Blocks.CRAFTING_TABLE));
         BlockState bs = getDefaultState();
         bs = bs.with(loadedProperty, false);
         bs = bs.with(enabledProperty, false);
@@ -47,55 +44,54 @@ public class FactoryBlock extends ContainerBlock {
     }
 
     @Override
-    @Nonnull
     @Deprecated
-    public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockRayTraceResult hit) {
-        ActionResultType defaultType = super.onBlockActivated(state, world, pos, player, hand, hit);
+    public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
+        ActionResult defaultType = super.onUse(state, world, pos, player, hand, hit);
 
-        if (defaultType != ActionResultType.PASS) {
+        if (defaultType != ActionResult.PASS) {
             return defaultType;
         }
 
-        if (world.isRemote) {
+        if (world.isClient) {
             lastWorld = world;
             lastBlockPosition = pos;
-            return ActionResultType.SUCCESS;
+            return ActionResult.SUCCESS;
         }
 
-        INamedContainerProvider container = state.getContainer(world, pos);
+        NamedScreenHandlerFactory container = state.createScreenHandlerFactory(world, pos);
 
-        player.openContainer(container);
-        return ActionResultType.SUCCESS;
+        player.openHandledScreen(container);
+        return ActionResult.SUCCESS;
     }
 
     @Override
     @Deprecated
-    public void onReplaced(BlockState state, World worldIn, BlockPos pos, BlockState newState, boolean isMoving) {
+    public void onStateReplaced(BlockState state, World worldIn, BlockPos pos, BlockState newState, boolean isMoving) {
         if (state.getBlock() != newState.getBlock()) {
-            TileEntity tileentity = worldIn.getTileEntity(pos);
-            if (tileentity instanceof IInventory) {
+            BlockEntity tileentity = worldIn.getBlockEntity(pos);
+            if (tileentity instanceof Inventory) {
                 if (tileentity instanceof FactoryEntity) {
                     // don't drop crafting exemple
-                    ((FactoryEntity) tileentity).removeStackFromSlot(9);
+                    ((FactoryEntity) tileentity).removeStack(9);
                 }
-                InventoryHelper.dropInventoryItems(worldIn, pos, (IInventory) tileentity);
-                worldIn.updateComparatorOutputLevel(pos, this);
+                ItemScatterer.spawn(worldIn, pos, (Inventory) tileentity);
+                worldIn.updateComparators(pos, this);
             }
 
-            super.onReplaced(state, worldIn, pos, newState, isMoving);
+            super.onStateReplaced(state, worldIn, pos, newState, isMoving);
         }
     }
 
     public void tick(BlockState state, ServerWorld worldIn, BlockPos pos, Random rand) {
-        TileEntity tileentity = worldIn.getTileEntity(pos);
+        BlockEntity tileentity = worldIn.getBlockEntity(pos);
         if (tileentity instanceof FactoryEntity) {
             ((FactoryEntity) tileentity).tick();
         }
     }
 
     @Override
-    protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
-        super.fillStateContainer(builder);
+    protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
+        super.appendProperties(builder);
         builder.add(loadedProperty, enabledProperty, openProperty);
     }
 
@@ -104,9 +100,8 @@ public class FactoryBlock extends ContainerBlock {
         return BlockRenderType.MODEL;
     }
 
-    @Nullable
     @Override
-    public TileEntity createNewTileEntity(IBlockReader worldIn) {
+    public BlockEntity createBlockEntity(BlockView world) {
         return new FactoryEntity();
     }
 }
