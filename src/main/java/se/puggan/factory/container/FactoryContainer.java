@@ -1,35 +1,34 @@
 package se.puggan.factory.container;
 
-import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Nonnull;
-import net.minecraft.client.util.RecipeBookCategories;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraft.inventory.container.ClickType;
-import net.minecraft.inventory.container.RecipeBookContainer;
-import net.minecraft.inventory.container.Slot;
 import net.minecraft.inventory.CraftingInventory;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.InventoryHelper;
-import net.minecraft.item.crafting.ICraftingRecipe;
-import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.item.crafting.RecipeItemHelper;
+import net.minecraft.inventory.Inventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.recipe.CraftingRecipe;
+import net.minecraft.recipe.Recipe;
+import net.minecraft.recipe.RecipeFinder;
+import net.minecraft.screen.AbstractRecipeScreenHandler;
+import net.minecraft.screen.slot.Slot;
+import net.minecraft.screen.slot.SlotActionType;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
-import se.puggan.factory.blocks.FactoryBlock;
-import se.puggan.factory.container.slot.*;
 import se.puggan.factory.Factory;
+import se.puggan.factory.blocks.FactoryBlock;
+import se.puggan.factory.container.slot.HiddenSlot;
+import se.puggan.factory.container.slot.ItemSlot;
+import se.puggan.factory.container.slot.LockedSlot;
+import se.puggan.factory.container.slot.PlayerSlot;
+import se.puggan.factory.container.slot.ReceiptSlot;
 import se.puggan.factory.network.StateEnabledMessage;
-import se.puggan.factory.util.RegistryHandler;
 
-public class FactoryContainer extends RecipeBookContainer<CraftingInventory> {
+public class FactoryContainer extends AbstractRecipeScreenHandler<CraftingInventory> {
     private List<FactoryScreen> screens;
     private boolean enabled;
     private final PlayerInventory pInventory;
@@ -37,8 +36,8 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> {
     private boolean loading;
     private final boolean clientSide;
 
-    public FactoryContainer(int windowId, PlayerInventory playerInventory, IInventory inventory) {
-        super(RegistryHandler.FACTORY_CONTAINER.get(), windowId);
+    public FactoryContainer(int windowId, PlayerInventory playerInventory, Inventory inventory) {
+        super(Factory.containerType, windowId);
         screens = new ArrayList<>();
         loading = true;
         pInventory = playerInventory;
@@ -48,13 +47,13 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> {
         }
         fInventory = (FactoryEntity) inventory;
         // TODO why is fInventory.getPos() BlockPos.ZERO in the client
-        if (playerInventory.player.world.isRemote) {
-            fInventory.setWorldAndPos(FactoryBlock.lastWorld, FactoryBlock.lastBlockPosition);
+        if (playerInventory.player.world.isClient) {
+            fInventory.setLocation(FactoryBlock.lastWorld, FactoryBlock.lastBlockPosition);
             FactoryBlock.lastWorld = null;
             FactoryBlock.lastBlockPosition = null;
         }
         enabled = fInventory.getState(FactoryBlock.enabledProperty);
-        fInventory.openInventory(playerInventory.player);
+        fInventory.onOpen(playerInventory.player);
         slotInventory();
         loading = false;
         if (enabled) {
@@ -63,10 +62,10 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> {
             deactivate(false);
         }
         lockInput();
-        onCraftMatrixChanged(fInventory);
+        onContentChanged(fInventory);
     }
 
-    public FactoryContainer(int windowId, PlayerInventory playerInventory, PacketBuffer extraData) {
+    public FactoryContainer(int windowId, PlayerInventory playerInventory, PacketByteBuf extraData) {
         this(windowId, playerInventory, new FactoryEntity());
     }
 
@@ -88,7 +87,7 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> {
                 ItemSlot slot = new ItemSlot(fInventory, FactoryEntity.resultSlotIndex + 1 + index, 8 + 18 * x, 17 + 18 * y, enabled);
                 addSlot(slot);
                 if (enabled) {
-                    slot.lockItem(inventorySlots.get(index));
+                    slot.lockItem(slots.get(index));
                 }
             }
         }
@@ -113,7 +112,7 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> {
     }
 
     @Override
-    public boolean canInteractWith(@Nonnull PlayerEntity player) {
+    public boolean canUse(PlayerEntity player) {
         return true;
     }
 
@@ -122,63 +121,64 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> {
     }
 
     @Override
-    public void fillStackedContents(@Nonnull RecipeItemHelper itemHelper) {
+    public void populateRecipeFinder(RecipeFinder finder) {
         for (int index = 0; index < FactoryEntity.resultSlotIndex; ++index) {
-            ItemStack itemstack = fInventory.getStackInSlot(index);
-            itemHelper.accountPlainStack(itemstack);
+            ItemStack itemstack = fInventory.getStack(index);
+            finder.addNormalItem(itemstack);
         }
     }
 
     @Override
-    public void clear() {
+    public void clearCraftingSlots() {
         fInventory.clear();
     }
 
     @Override
-    public boolean matches(IRecipe<? super CraftingInventory> recipeIn) {
+    public boolean matches(Recipe<? super CraftingInventory> recipe) {
         CraftingInventory ci = new CraftingInventory(new DummyContainer(), 3, 3);
         for (int i = 0; i < 9; i++) {
-            ci.setInventorySlotContents(i, fInventory.getStackInSlot(i));
+            ci.setStack(i, fInventory.getStack(i));
         }
-        return recipeIn.matches(ci, pInventory.player.world);
+        return recipe.matches(ci, pInventory.player.world);
     }
 
     @Override
-    public int getOutputSlot() {
+    public int getCraftingResultSlotIndex() {
         // Crafting output, not factory output
         return FactoryEntity.resultSlotIndex;
     }
 
     @Override
-    public int getWidth() {
+    public int getCraftingWidth() {
         return 3;
     }
 
     @Override
-    public int getHeight() {
+    public int getCraftingHeight() {
         return 3;
     }
 
     @Override
-    public int getSize() {
+    public int getCraftingSlotCount() {
         return 10;
     }
 
+    /*
     @Override
-    @Nonnull
-    public List<RecipeBookCategories> getRecipeBookCategories() {
+    public List<RecipeBookGroup> getRecipeBookCategories() {
         return Lists.newArrayList(
-                RecipeBookCategories.SEARCH,
-                RecipeBookCategories.CRAFTING_EQUIPMENT,
-                RecipeBookCategories.CRAFTING_BUILDING_BLOCKS,
-                RecipeBookCategories.CRAFTING_MISC,
-                RecipeBookCategories.CRAFTING_REDSTONE
+                RecipeBookGroup.SEARCH,
+                RecipeBookGroup.CRAFTING_EQUIPMENT,
+                RecipeBookGroup.CRAFTING_BUILDING_BLOCKS,
+                RecipeBookGroup.CRAFTING_MISC,
+                RecipeBookGroup.CRAFTING_REDSTONE
         );
     }
+    */
 
     public void lockInput() {
         for (int i = 0; i < 10; i++) {
-            Slot slot = inventorySlots.get(i);
+            Slot slot = slots.get(i);
             if (!(slot instanceof ReceiptSlot)) {
                 continue;
             }
@@ -190,7 +190,7 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> {
         }
 
         for (int i = 10; i < 20; i++) {
-            Slot slot = inventorySlots.get(i);
+            Slot slot = slots.get(i);
             if (!(slot instanceof ItemSlot)) {
                 continue;
             }
@@ -203,7 +203,7 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> {
                 continue;
             }
 
-            ItemStack stack = inventorySlots.get(i - 10).getStack();
+            ItemStack stack = slots.get(i - 10).getStack();
             if (stack.isEmpty()) {
                 if (itemSlot.enabled) {
                     itemSlot.lockItem((Item) null);
@@ -221,7 +221,7 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> {
 
     public boolean activate(boolean send) {
         //<editor-fold desc="ServerSide">
-        if (pInventory.player.world != null && !pInventory.player.world.isRemote) {
+        if (pInventory.player.world != null && !pInventory.player.world.isClient) {
             enabled = true;
             lockInput();
             return true;
@@ -229,7 +229,7 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> {
         //</editor-fold>
 
         //<editor-fold desc="Client Side">
-        Slot rOut = inventorySlots.get(FactoryEntity.resultSlotIndex);
+        Slot rOut = slots.get(FactoryEntity.resultSlotIndex);
         if (rOut.getStack().isEmpty()) {
             deactivate(send);
         }
@@ -258,17 +258,14 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> {
 
     public boolean deactivate(boolean send) {
         //<editor-fold desc="Server Side">
-        if (pInventory.player.world != null && !pInventory.player.world.isRemote) {
+        if (pInventory.player.world != null && !pInventory.player.world.isClient) {
             BlockPos pos = fInventory.getPos();
             for (int i = FactoryEntity.resultSlotIndex + 1; i <= FactoryEntity.outputSlotIndex; i++) {
-                Slot slot = inventorySlots.get(i);
+                Slot slot = slots.get(i);
                 if (slot instanceof ItemSlot) {
                     ItemStack stack = slot.getStack();
                     if (!stack.isEmpty()) {
-                        pInventory.addItemStackToInventory(stack);
-                    }
-                    if (!stack.isEmpty()) {
-                        InventoryHelper.spawnItemStack(pInventory.player.world, pos.getX(), pos.getY(), pos.getZ(), stack);
+                        pInventory.offerOrDrop(pInventory.player.world, stack);
                     }
                     ((ItemSlot) slot).enabled = false;
                 }
@@ -276,7 +273,7 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> {
 
             enabled = false;
             lockInput();
-            detectAndSendChanges();
+            sendContentUpdates();
             return true;
         }
         //</editor-fold>
@@ -289,7 +286,7 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> {
             return true;
         }
         for (int i = 10; i < 20; i++) {
-            Slot slot = inventorySlots.get(i);
+            Slot slot = slots.get(i);
             if (slot instanceof ItemSlot) {
                 ((ItemSlot) slot).enabled = false;
             }
@@ -307,44 +304,44 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> {
     }
 
     @Override
-    public void onCraftMatrixChanged(@Nonnull IInventory inventoryIn) {
+    public void onContentChanged(Inventory inventoryIn) {
         if (loading) {
-            Factory.LOGGER.warn("onCraftMatrixChanged() white loading");
+            Factory.LOGGER.warn("onContentChanged() white loading");
             return;
         }
-        super.onCraftMatrixChanged(inventoryIn);
+        super.onContentChanged(inventoryIn);
 
-        if (pInventory.player.world.isRemote) {
+        if (pInventory.player.world.isClient) {
             return;
         }
 
-        ItemStack oldStack = inventorySlots.get(FactoryEntity.resultSlotIndex).getStack().copy();
-        ICraftingRecipe recipe = fInventory.calculateRecipe();
+        ItemStack oldStack = slots.get(FactoryEntity.resultSlotIndex).getStack().copy();
+        CraftingRecipe recipe = fInventory.calculateRecipe();
         if (recipe == null) {
             setRecipeResult(ItemStack.EMPTY);
         } else {
-            setRecipeResult(recipe.getRecipeOutput());
+            setRecipeResult(recipe.getOutput());
         }
-        ItemStack newStack = inventorySlots.get(FactoryEntity.resultSlotIndex).getStack();
-        if (!oldStack.equals(newStack, false)) {
-            detectAndSendChanges();
+        ItemStack newStack = slots.get(FactoryEntity.resultSlotIndex).getStack();
+        if (!oldStack.isItemEqual(newStack)) {
+            sendContentUpdates();
         }
     }
 
     private void setRecipeResult(ItemStack stack) {
-        Slot slot = inventorySlots.get(FactoryEntity.resultSlotIndex);
+        Slot slot = slots.get(FactoryEntity.resultSlotIndex);
         if (slot instanceof LockedSlot) {
             ((LockedSlot) slot).enabled = !stack.isEmpty();
         }
-        slot.putStack(stack);
-        ((ItemSlot) inventorySlots.get(FactoryEntity.outputSlotIndex)).lockItem(stack);
-        detectAndSendChanges();
+        slot.setStack(stack);
+        ((ItemSlot) slots.get(FactoryEntity.outputSlotIndex)).lockItem(stack);
+        sendContentUpdates();
     }
 
     @Override
-    public void onContainerClosed(@Nonnull PlayerEntity playerIn) {
-        super.onContainerClosed(playerIn);
-        fInventory.closeInventory(playerIn);
+    public void close(PlayerEntity playerIn) {
+        super.close(playerIn);
+        fInventory.onClose(playerIn);
         if (clientSide) {
             return;
         }
@@ -369,9 +366,9 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> {
     }
 
     @Override
-    public ItemStack transferStackInSlot(PlayerEntity player, int index) {
-        Slot slot = this.inventorySlots.get(index);
-        if (slot == null || !slot.getHasStack()) {
+    public ItemStack transferSlot(PlayerEntity player, int index) {
+        Slot slot = this.slots.get(index);
+        if (slot == null || !slot.hasStack()) {
             return ItemStack.EMPTY;
         }
 
@@ -398,30 +395,30 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> {
         }
 
         //
-        if (!this.mergeItemStack(slotStack, from, to + 1, reverse)) {
+        if (!this.insertItem(slotStack, from, to + 1, reverse)) {
             return ItemStack.EMPTY;
         }
 
         if (slotStack.isEmpty()) {
-            slot.putStack(ItemStack.EMPTY);
+            slot.setStack(ItemStack.EMPTY);
         } else {
-            slot.onSlotChanged();
+            slot.markDirty();
         }
         return newStack;
     }
 
     @Override
-    public ItemStack slotClick(int slotId, int dragType, ClickType clickType, PlayerEntity player) {
-        ItemStack itemStack = super.slotClick(slotId, dragType, clickType, player);
+    public ItemStack onSlotClick(int slotId, int dragType, SlotActionType clickType, PlayerEntity player) {
+        ItemStack itemStack = super.onSlotClick(slotId, dragType, clickType, player);
         if (slotId < FactoryEntity.resultSlotIndex) {
-            onCraftMatrixChanged(fInventory);
+            onContentChanged(fInventory);
         }
         return itemStack;
     }
 
-    @OnlyIn(Dist.CLIENT)
-    public void setAll(List<ItemStack> itemList) {
-        super.setAll(itemList);
+    @Environment(EnvType.CLIENT)
+    public void updateSlotStacks(List<ItemStack> itemList) {
+        super.updateSlotStacks(itemList);
         lockInput();
     }
 }
