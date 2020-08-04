@@ -20,6 +20,12 @@
   "entrypoints": {
     "main": [
       "se.puggan.factory.Factory"
+    ],
+    "client": [
+      "se.puggan.factory.Factory"
+    ],
+    "server": [
+      "se.puggan.factory.Factory"
     ]
   },
   "mixins": [

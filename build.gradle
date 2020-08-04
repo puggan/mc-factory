@@ -11,6 +11,8 @@ version =  mc_version + '-' + project.mod_version
 group = project.maven_group
 
 dependencies {
+    implementation 'org.jetbrains:annotations:19.0.0'
+
     //to change the versions see the gradle.properties file
     minecraft "com.mojang:minecraft:${project.mc_version}"
     mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
