@@ -1,40 +1,52 @@
 package se.puggan.factory;
 
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLDedicatedServerSetupEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.client.screenhandler.v1.ScreenRegistry;
+import net.fabricmc.fabric.api.screenhandler.v1.ScreenHandlerRegistry;
+import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.item.BlockItem;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemGroup;
+import net.minecraft.screen.ScreenHandlerType;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.registry.Registry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import se.puggan.factory.util.RegistryHandler;
+import se.puggan.factory.blocks.FactoryBlock;
+import se.puggan.factory.container.FactoryContainer;
+import se.puggan.factory.container.FactoryEntity;
+import se.puggan.factory.container.FactoryScreen;
+import se.puggan.factory.network.FactoryNetwork;
 
-// The value here should match an entry in the META-INF/mods.toml file
-@Mod("factory")
-public class Factory {
+public class Factory implements ModInitializer, ClientModInitializer {
     // Directly reference a log4j logger.
     public static final Logger LOGGER = LogManager.getLogger();
     public static String MOD_ID = "factory";
+    public static ScreenHandlerType<FactoryContainer> containerType;
+    public static BlockEntityType<FactoryEntity> blockEntityType;
 
     public Factory() {
-        // Register the setup method for modloading
-        IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
-        modEventBus.addListener(this::setup);
-        modEventBus.addListener(this::setupClient);
-        modEventBus.addListener(this::setupServer);
-
-        RegistryHandler.init();
     }
 
-    private void setup(final FMLCommonSetupEvent event) {
+    @Override
+    public void onInitialize() {
+        Identifier factory_id = new Identifier(MOD_ID, MOD_ID);
+
+        FactoryBlock block = new FactoryBlock();
+        Registry.register(Registry.BLOCK, factory_id, block);
+
+        Item.Settings itemSetting = new Item.Settings().group(ItemGroup.REDSTONE);
+        Registry.register(Registry.ITEM, factory_id, new BlockItem(block, itemSetting));
+
+        blockEntityType = Registry.register(Registry.BLOCK_ENTITY_TYPE, factory_id, BlockEntityType.Builder.create(FactoryEntity::new, block).build(null));
+
+        containerType = ScreenHandlerRegistry.registerExtended(factory_id, FactoryContainer::new);
+
+        FactoryNetwork.init();
     }
 
-    private void setupClient(final FMLClientSetupEvent event) {
-        RegistryHandler.initClientOnly();
-    }
-
-    private void setupServer(final FMLDedicatedServerSetupEvent event) {
-        RegistryHandler.initServerOnly();
+    public void onInitializeClient() {
+        ScreenRegistry.register(containerType, FactoryScreen::new);
     }
 }
