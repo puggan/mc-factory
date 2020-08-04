@@ -5,6 +5,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import java.util.List;
 import java.util.Stack;
 import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.gui.screen.TickableElement;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.screen.recipebook.RecipeBookWidget;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -15,11 +16,10 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.Tickable;
 import se.puggan.factory.container.slot.ItemSlot;
 import se.puggan.factory.container.slot.ReceiptSlot;
 
-public class FactoryScreen extends HandledScreen<FactoryContainer> implements Tickable {
+public class FactoryScreen extends HandledScreen<FactoryContainer> implements TickableElement {
     /**
      * name: x, y, w, h.
      * background: 0, 0, 176, 166

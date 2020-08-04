@@ -3,6 +3,7 @@ package se.puggan.factory.container;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.TreeSet;
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.LootableContainerBlockEntity;
 import net.minecraft.entity.player.PlayerInventory;
@@ -12,6 +13,7 @@ import net.minecraft.inventory.SidedInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.recipe.CraftingRecipe;
 import net.minecraft.recipe.Recipe;
 import net.minecraft.recipe.RecipeFinder;
@@ -19,10 +21,12 @@ import net.minecraft.recipe.RecipeInputProvider;
 import net.minecraft.recipe.RecipeType;
 import net.minecraft.recipe.RecipeUnlocker;
 import net.minecraft.screen.ScreenHandler;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.state.property.BooleanProperty;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Tickable;
 import net.minecraft.util.collection.DefaultedList;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import org.jetbrains.annotations.Nullable;
 import se.puggan.factory.Factory;
@@ -30,7 +34,7 @@ import se.puggan.factory.blocks.FactoryBlock;
 import se.puggan.factory.util.IntPair;
 
 // implements ISidedInventory
-public class FactoryEntity extends LootableContainerBlockEntity implements Tickable, RecipeUnlocker, RecipeInputProvider, SidedInventory {
+public class FactoryEntity extends LootableContainerBlockEntity implements RecipeUnlocker, RecipeInputProvider, SidedInventory, ExtendedScreenHandlerFactory, Tickable {
     public static final int resultSlotIndex = 9;
     public static final int outputSlotIndex = 19;
     public final int SIZE = 20;
@@ -119,6 +123,7 @@ public class FactoryEntity extends LootableContainerBlockEntity implements Ticka
         if (world == null || world.isClient) {
             return;
         }
+
         timer++;
         // 1s = 20 ticks = 10 redstone ticks, 8 ticks matches hopper cooldown
         int timerGoal = valid ? 8 : 20;
@@ -324,5 +329,14 @@ public class FactoryEntity extends LootableContainerBlockEntity implements Ticka
     @Override
     public boolean canExtract(int index, ItemStack stack, Direction direction) {
         return index == outputSlotIndex;
+    }
+
+    @Override
+    public void writeScreenOpeningData(ServerPlayerEntity serverPlayerEntity, PacketByteBuf packetByteBuf) {
+        if (pos == null || pos.compareTo(BlockPos.ZERO) == 0) {
+            world = serverPlayerEntity.world;
+            pos = FactoryBlock.lastBlockPosition;
+        }
+        packetByteBuf.writeBlockPos(pos);
     }
 }

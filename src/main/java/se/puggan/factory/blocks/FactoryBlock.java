@@ -1,6 +1,5 @@
 package se.puggan.factory.blocks;
 
-import java.util.Random;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
@@ -10,8 +9,6 @@ import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.Inventory;
-import net.minecraft.screen.NamedScreenHandlerFactory;
-import net.minecraft.server.world.ServerWorld;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.BooleanProperty;
 import net.minecraft.state.property.Properties;
@@ -23,6 +20,7 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
+import se.puggan.factory.Factory;
 import se.puggan.factory.container.FactoryEntity;
 
 public class FactoryBlock extends BlockWithEntity {
@@ -58,9 +56,24 @@ public class FactoryBlock extends BlockWithEntity {
             return ActionResult.SUCCESS;
         }
 
-        NamedScreenHandlerFactory container = state.createScreenHandlerFactory(world, pos);
+        lastWorld = world;
+        lastBlockPosition = pos;
+        BlockEntity blockEntity = world.getBlockEntity(pos);
+        lastWorld = null;
+        lastBlockPosition = null;
 
-        player.openHandledScreen(container);
+        if(!(blockEntity instanceof FactoryEntity)) {
+            Factory.LOGGER.error("blockEntity at " + pos + " is not an FactoryEntity");
+            return ActionResult.FAIL;
+        }
+
+        FactoryEntity entity = (FactoryEntity) blockEntity;
+
+        player.openHandledScreen(entity);
+
+        //NamedScreenHandlerFactory container = state.createScreenHandlerFactory(world, pos);
+        //player.openHandledScreen(container);
+
         return ActionResult.SUCCESS;
     }
 
@@ -82,12 +95,16 @@ public class FactoryBlock extends BlockWithEntity {
         }
     }
 
-    public void tick(BlockState state, ServerWorld worldIn, BlockPos pos, Random rand) {
+    /*
+    @Override
+    public void scheduledTick(BlockState state, ServerWorld worldIn, BlockPos pos, Random rand) {
         BlockEntity tileentity = worldIn.getBlockEntity(pos);
         if (tileentity instanceof FactoryEntity) {
-            ((FactoryEntity) tileentity).tick();
+            //((FactoryEntity) tileentity).tick();
+            ((FactoryEntity) tileentity).tick2();
         }
     }
+    */
 
     @Override
     protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
@@ -102,6 +119,10 @@ public class FactoryBlock extends BlockWithEntity {
 
     @Override
     public BlockEntity createBlockEntity(BlockView world) {
-        return new FactoryEntity();
+        FactoryEntity entity = new FactoryEntity();
+        if(lastBlockPosition != null) {
+            entity.setLocation(lastWorld, lastBlockPosition);
+        }
+        return entity;
     }
 }

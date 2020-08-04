@@ -19,6 +19,7 @@ import net.minecraft.screen.slot.Slot;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import se.puggan.factory.Factory;
 import se.puggan.factory.blocks.FactoryBlock;
 import se.puggan.factory.container.slot.HiddenSlot;
@@ -35,9 +36,14 @@ public class FactoryContainer extends AbstractRecipeScreenHandler<CraftingInvent
     public FactoryEntity fInventory;
     private boolean loading;
     private final boolean clientSide;
+    private BlockPos clientPos;
 
     public FactoryContainer(int windowId, PlayerInventory playerInventory, Inventory inventory) {
+        this(windowId, null, playerInventory, inventory);
+    }
+    public FactoryContainer(int windowId, BlockPos pos, PlayerInventory playerInventory, Inventory inventory) {
         super(Factory.containerType, windowId);
+        clientPos = pos;
         screens = new ArrayList<>();
         loading = true;
         pInventory = playerInventory;
@@ -46,13 +52,12 @@ public class FactoryContainer extends AbstractRecipeScreenHandler<CraftingInvent
             throw new RuntimeException("Bad inventory type, expected FactoryEntity");
         }
         fInventory = (FactoryEntity) inventory;
-        // TODO why is fInventory.getPos() BlockPos.ZERO in the client
-        if (playerInventory.player.world.isClient) {
-            fInventory.setLocation(FactoryBlock.lastWorld, FactoryBlock.lastBlockPosition);
-            FactoryBlock.lastWorld = null;
-            FactoryBlock.lastBlockPosition = null;
+        World world = playerInventory.player.world;
+        if(world.isClient) {
+            enabled = world.getBlockState(pos).get(FactoryBlock.enabledProperty);
+        } else {
+            enabled = fInventory.getState(FactoryBlock.enabledProperty);
         }
-        enabled = fInventory.getState(FactoryBlock.enabledProperty);
         fInventory.onOpen(playerInventory.player);
         slotInventory();
         loading = false;
@@ -66,7 +71,7 @@ public class FactoryContainer extends AbstractRecipeScreenHandler<CraftingInvent
     }
 
     public FactoryContainer(int windowId, PlayerInventory playerInventory, PacketByteBuf extraData) {
-        this(windowId, playerInventory, new FactoryEntity());
+        this(windowId, extraData.readBlockPos(), playerInventory, new FactoryEntity());
     }
 
     private void slotInventory() {
@@ -245,8 +250,7 @@ public class FactoryContainer extends AbstractRecipeScreenHandler<CraftingInvent
         lockInput();
         fInventory.stateEnabled(true);
         if (send) {
-            BlockPos pos = fInventory.getPos();
-            StateEnabledMessage.sendToServer(pos, true);
+            StateEnabledMessage.sendToServer(clientPos, true);
         }
         return true;
         //</editor-fold>
@@ -259,7 +263,6 @@ public class FactoryContainer extends AbstractRecipeScreenHandler<CraftingInvent
     public boolean deactivate(boolean send) {
         //<editor-fold desc="Server Side">
         if (pInventory.player.world != null && !pInventory.player.world.isClient) {
-            BlockPos pos = fInventory.getPos();
             for (int i = FactoryEntity.resultSlotIndex + 1; i <= FactoryEntity.outputSlotIndex; i++) {
                 Slot slot = slots.get(i);
                 if (slot instanceof ItemSlot) {
@@ -296,8 +299,7 @@ public class FactoryContainer extends AbstractRecipeScreenHandler<CraftingInvent
         lockInput();
         fInventory.stateEnabled(false);
         if (send) {
-            BlockPos pos = fInventory.getPos();
-            StateEnabledMessage.sendToServer(pos, false);
+            StateEnabledMessage.sendToServer(clientPos, false);
         }
         return true;
         //</editor-fold>
