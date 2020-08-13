@@ -8,6 +8,7 @@ import net.minecraft.client.util.RecipeBookCategories;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.item.crafting.RecipeBookCategory;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.inventory.container.ClickType;
@@ -168,12 +169,18 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> {
     @Nonnull
     public List<RecipeBookCategories> getRecipeBookCategories() {
         return Lists.newArrayList(
-                RecipeBookCategories.SEARCH,
+                RecipeBookCategories.CRAFTING_SEARCH,
                 RecipeBookCategories.CRAFTING_EQUIPMENT,
                 RecipeBookCategories.CRAFTING_BUILDING_BLOCKS,
                 RecipeBookCategories.CRAFTING_MISC,
                 RecipeBookCategories.CRAFTING_REDSTONE
         );
+    }
+
+    @Override
+    public RecipeBookCategory func_241850_m() {
+        return RecipeBookCategory.CRAFTING;
+
     }
 
     public void lockInput() {
