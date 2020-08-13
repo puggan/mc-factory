@@ -1,6 +1,5 @@
 package se.puggan.factory.container;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.widget.button.ImageButton;
@@ -25,9 +24,8 @@ public class EnabledButton extends ImageButton {
     }
 
     @Override
-    // public void onPress() { #MCP
-    public void func_230930_b_() {
-        if(enabled) {
+    public void onPress() {
+        if (enabled) {
             enabled = false;
             offFunction.run();
             return;
@@ -37,8 +35,7 @@ public class EnabledButton extends ImageButton {
     }
 
     @Override
-    //public void renderButton(int p_renderButton_1_, int p_renderButton_2_, float p_renderButton_3_) { #MCP
-    public void func_230431_b_(MatrixStack p_230431_1_, int p_renderButton_1_, int p_renderButton_2_, float p_renderButton_3_) {
+    public void renderButton(int p_renderButton_1_, int p_renderButton_2_, float p_renderButton_3_) {
         Minecraft minecraft = Minecraft.getInstance();
         minecraft.getTextureManager().bindTexture(FactoryScreen.GUI_MAP);
         /*
@@ -49,11 +46,9 @@ public class EnabledButton extends ImageButton {
          */
         RenderSystem.disableDepthTest();
         float textureX = enabled ? 177 : 198;
-        //float textureY = isHovered() ? 19 : 0; #MCP
-        float textureY = func_230449_g_() ? 19 : 0;
+        float textureY = isHovered() ? 19 : 0;
 
-        // blit(x, y, textureX, textureY, width, height, 256, 256); #MCP
-        func_238463_a_(p_230431_1_, field_230690_l_, field_230691_m_, textureX, textureY, field_230688_j_, field_230689_k_, 256, 256);
+        blit(x, y, textureX, textureY, width, height, 256, 256);
         RenderSystem.enableDepthTest();
     }
 }

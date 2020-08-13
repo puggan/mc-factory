@@ -58,8 +58,7 @@ public class StateEnabledMessage extends NetworkMessage {
         }
 
         BlockState bs = world.getBlockState(pos);
-        // if (!bs.has(FactoryBlock.enabledProperty)) { #MCP
-        if (!bs.func_235901_b_(FactoryBlock.enabledProperty)) {
+        if (!bs.has(FactoryBlock.enabledProperty)) {
             Factory.LOGGER.error("StateEnabledMessage.handle() bad BS at " + pos.toString());
         }
 
