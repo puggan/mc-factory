@@ -14,6 +14,7 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.recipe.CraftingRecipe;
 import net.minecraft.recipe.Recipe;
 import net.minecraft.recipe.RecipeFinder;
+import net.minecraft.recipe.book.RecipeBookCategory;
 import net.minecraft.screen.AbstractRecipeScreenHandler;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.screen.slot.SlotActionType;
@@ -172,7 +173,7 @@ public class FactoryContainer extends AbstractRecipeScreenHandler<CraftingInvent
     @Override
     public List<RecipeBookGroup> getRecipeBookCategories() {
         return Lists.newArrayList(
-                RecipeBookGroup.SEARCH,
+                RecipeBookGroup.CRAFTING_SEARCH,
                 RecipeBookGroup.CRAFTING_EQUIPMENT,
                 RecipeBookGroup.CRAFTING_BUILDING_BLOCKS,
                 RecipeBookGroup.CRAFTING_MISC,
@@ -180,6 +181,11 @@ public class FactoryContainer extends AbstractRecipeScreenHandler<CraftingInvent
         );
     }
     */
+
+    @Override
+    public RecipeBookCategory getCategory() {
+        return RecipeBookCategory.CRAFTING;
+    }
 
     public void lockInput() {
         for (int i = 0; i < 10; i++) {
