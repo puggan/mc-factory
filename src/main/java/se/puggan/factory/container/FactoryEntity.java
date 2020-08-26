@@ -308,8 +308,7 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
         return IntPair.aArray(list);
     }
 
-    @Override
-    public boolean canInsertItem(int index, ItemStack stack, @Nullable Direction direction) {
+    public boolean isItemValidForSlot(int index, ItemStack stack) {
         if (index <= resultSlotIndex) {
             return false;
         }
@@ -330,6 +329,11 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
             return true;
         }
         return iStack.getItem() == item;
+    }
+
+    @Override
+    public boolean canInsertItem(int index, ItemStack stack, @Nullable Direction direction) {
+        return isItemValidForSlot(index, stack);
     }
 
     @Override
