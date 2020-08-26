@@ -1,4 +1,9 @@
 # Changelog 
+## v1.2.0
+* use SidedInvWrapper to make it work together with other mods.
+ Versions 1.1.1 only had support for ISidedInventory-handling,
+ but some mods only have support the ITEM_HANDLER_CAPABILITY way.
+
 ## v1.1.1
 * Add recipe: crafting table + iron block + redstone
 
