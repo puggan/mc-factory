@@ -52,13 +52,14 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
         itemHandler = new FactoryItemHandler(this);
     }
 
+    @Nonnull
     @Override
     protected NonNullList<ItemStack> getItems() {
         return content;
     }
 
     @Override
-    protected void setItems(NonNullList<ItemStack> newContent) {
+    protected void setItems(@Nonnull NonNullList<ItemStack> newContent) {
         content = newContent;
         itemHandler.dirty();
     }
@@ -78,14 +79,17 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
         return new FactoryContainer(windowId, playerInventory, this);
     }
 
-    public CompoundNBT write(CompoundNBT compound) {
+    @Nonnull
+    @Override
+    public CompoundNBT write(@Nonnull CompoundNBT compound) {
         super.write(compound);
         ItemStackHelper.saveAllItems(compound, content);
         return compound;
     }
 
+    @Override
     //public void read(CompoundNBT compound) { #MCP
-    public void func_230337_a_(BlockState p_230337_1_, CompoundNBT compound) {
+    public void func_230337_a_(@Nonnull BlockState p_230337_1_, @Nonnull CompoundNBT compound) {
         //super.read(compound); #MCP
         super.func_230337_a_(p_230337_1_, compound);
         content = NonNullList.withSize(this.getSizeInventory(), ItemStack.EMPTY);
@@ -93,7 +97,6 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
         itemHandler.dirty();
     }
 
-    @Nullable
     public boolean getState(BooleanProperty bp) {
         if (world == null) {
             Factory.LOGGER.warn("Failed to load state " + bp.getName() + ", no world");
@@ -216,8 +219,6 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
             return;
         }
         if(!content.get(toIndex).isEmpty()) {
-            ItemStack fromStack = content.get(fromIndex);
-            ItemStack toStack = content.get(toIndex);
             return;
         }
         ItemStack fromStack = content.get(fromIndex);
@@ -375,8 +376,9 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
         itemHandler.dirty();
     }
 
+    @Nonnull
     @Override
-    public int[] getSlotsForFace(Direction side) {
+    public int[] getSlotsForFace(@Nonnull Direction side) {
         boolean bottom = side == Direction.DOWN;
         return getSortedInboxSlots(!bottom, bottom);
     }
@@ -385,7 +387,7 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
         if (!getState(FactoryBlock.enabledProperty)) {
             return extract ? new int[]{outputSlotIndex} : new int[]{};
         }
-        Collection<IntPair> list = new TreeSet<IntPair>();
+        Collection<IntPair> list = new TreeSet<>();
         if(insert) {
             int offset = resultSlotIndex + 1;
             for (int index = offset; index < outputSlotIndex; index++) {
@@ -403,7 +405,7 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
         return IntPair.aArray(list);
     }
 
-    public boolean isItemValidForSlot(int index, ItemStack stack) {
+    public boolean isItemValidForSlot(int index, @Nonnull ItemStack stack) {
         if (index <= resultSlotIndex) {
             return false;
         }
@@ -427,17 +429,17 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
     }
 
     @Override
-    public boolean canInsertItem(int index, ItemStack stack, @Nullable Direction direction) {
+    public boolean canInsertItem(int index, @Nonnull ItemStack stack, @Nullable Direction direction) {
         return isItemValidForSlot(index, stack);
     }
 
     @Override
-    public boolean canExtractItem(int index, ItemStack stack, Direction direction) {
+    public boolean canExtractItem(int index, @Nonnull ItemStack stack, @Nonnull Direction direction) {
         return index == outputSlotIndex;
     }
 
     @Override
-    public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction facing) {
+    public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, @Nullable Direction facing) {
         if (!this.removed && capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
             return LazyOptional.of(() -> itemHandler).cast();
         }
