@@ -413,6 +413,9 @@ public class FactoryContainer extends RecipeBookContainer<CraftingInventory> {
         } else {
             slot.onSlotChanged();
         }
+
+        onCraftMatrixChanged(fInventory);
+
         return newStack;
     }
 

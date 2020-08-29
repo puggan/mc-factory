@@ -2,6 +2,7 @@ package se.puggan.factory.container;
 
 import java.util.Collection;
 import java.util.Optional;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -51,13 +52,14 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
         itemHandler = new FactoryItemHandler(this);
     }
 
+    @Nonnull
     @Override
     protected NonNullList<ItemStack> getItems() {
         return content;
     }
 
     @Override
-    protected void setItems(NonNullList<ItemStack> newContent) {
+    protected void setItems(@Nonnull NonNullList<ItemStack> newContent) {
         content = newContent;
         itemHandler.dirty();
     }
@@ -77,20 +79,22 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
         return new FactoryContainer(windowId, playerInventory, this);
     }
 
-    public CompoundNBT write(CompoundNBT compound) {
+    @Nonnull
+    @Override
+    public CompoundNBT write(@Nonnull CompoundNBT compound) {
         super.write(compound);
         ItemStackHelper.saveAllItems(compound, content);
         return compound;
     }
 
-    public void read(CompoundNBT compound) {
+    @Override
+    public void read(@Nonnull CompoundNBT compound) {
         super.read(compound);
         content = NonNullList.withSize(this.getSizeInventory(), ItemStack.EMPTY);
         ItemStackHelper.loadAllItems(compound, content);
         itemHandler.dirty();
     }
 
-    @Nullable
     public boolean getState(BooleanProperty bp) {
         if (world == null) {
             Factory.LOGGER.warn("Failed to load state " + bp.getName() + ", no world");
@@ -153,7 +157,89 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
 
         if (valid) {
             valid = doCrafting();
+        } else if (accept) {
+            doRebalance();
         }
+    }
+
+    private void doRebalance() {
+        int fromIndex = 0, toIndex = 0, goalAmount = 0;
+
+        // Make a map of slots and count per item
+        TreeMap<String, TreeSet<IntPair>> map = new TreeMap<>();
+        for (int recipeSlotIndex = 0; recipeSlotIndex < 9; recipeSlotIndex++) {
+            int inputSlotIndex = recipeSlotIndex + 10;
+            int count = 0;
+            ItemStack recipeStack = content.get(recipeSlotIndex);
+            if(recipeStack.isEmpty()) {
+                continue;
+            }
+            Item recipeItem = recipeStack.getItem();
+            ItemStack inputStack = content.get(inputSlotIndex);
+            if(inputStack.getItem() != recipeItem) {
+                 if(!inputStack.isEmpty()) {
+                     continue;
+                 }
+            } else {
+                count = inputStack.getCount();
+            }
+            String recipeItemKey = recipeItem.toString();
+            if(map.containsKey(recipeItemKey)) {
+                map.get(recipeItemKey).add(new IntPair(inputSlotIndex, count));
+            } else {
+                TreeSet<IntPair> list = new TreeSet<>();
+                list.add(new IntPair(inputSlotIndex, count));
+                map.put(recipeItemKey, list);
+            }
+        }
+
+        // Find out what item to move, and make sure we have enough items
+        for(TreeSet<IntPair> list : map.values()) {
+            // Only one slot for this item
+            int slotCount = list.size();
+            if(slotCount < 2) {
+                // The only slot for this item is empty, abort
+                if(list.first().b < 1) {
+                    return;
+                }
+            }
+            // if the first slot in the sorted list is non empty, all slots are none empty, skip
+            if(list.first().b > 0) {
+                continue;
+            }
+            // Count the total count
+            int sum = 0;
+            for(IntPair p : list) {
+                sum += p.b;
+            }
+            // If less items then slots, abort
+            if(sum < slotCount) {
+                return;
+            }
+            if(goalAmount > 0) {
+                continue;
+            }
+            goalAmount = sum / slotCount;
+            toIndex = list.first().a;
+            fromIndex = list.last().a;
+        }
+        if(goalAmount < 1 || fromIndex == toIndex) {
+            return;
+        }
+        if(!content.get(toIndex).isEmpty()) {
+            return;
+        }
+        ItemStack fromStack = content.get(fromIndex);
+        int moveCount = fromStack.getCount() - goalAmount;
+        if(moveCount < 0) {
+            return;
+        }
+        if(moveCount > goalAmount) {
+            moveCount = goalAmount;
+        }
+
+        ItemStack toStack = fromStack.split(moveCount);
+        setInventorySlotContents(toIndex, toStack);
     }
 
     private boolean validateCrafting() {
@@ -298,8 +384,9 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
         itemHandler.dirty();
     }
 
+    @Nonnull
     @Override
-    public int[] getSlotsForFace(Direction side) {
+    public int[] getSlotsForFace(@Nonnull Direction side) {
         boolean bottom = side == Direction.DOWN;
         return getSortedInboxSlots(!bottom, bottom);
     }
@@ -308,7 +395,7 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
         if (!getState(FactoryBlock.enabledProperty)) {
             return extract ? new int[]{outputSlotIndex} : new int[]{};
         }
-        Collection<IntPair> list = new TreeSet<IntPair>();
+        Collection<IntPair> list = new TreeSet<>();
         if(insert) {
             int offset = resultSlotIndex + 1;
             for (int index = offset; index < outputSlotIndex; index++) {
@@ -326,7 +413,7 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
         return IntPair.aArray(list);
     }
 
-    public boolean isItemValidForSlot(int index, ItemStack stack) {
+    public boolean isItemValidForSlot(int index, @Nonnull ItemStack stack) {
         if (index <= resultSlotIndex) {
             return false;
         }
@@ -350,17 +437,17 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
     }
 
     @Override
-    public boolean canInsertItem(int index, ItemStack stack, @Nullable Direction direction) {
+    public boolean canInsertItem(int index, @Nonnull ItemStack stack, @Nullable Direction direction) {
         return isItemValidForSlot(index, stack);
     }
 
     @Override
-    public boolean canExtractItem(int index, ItemStack stack, Direction direction) {
+    public boolean canExtractItem(int index, @Nonnull ItemStack stack, @Nonnull Direction direction) {
         return index == outputSlotIndex;
     }
 
     @Override
-    public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction facing) {
+    public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, @Nullable Direction facing) {
         if (!this.removed && capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
             return LazyOptional.of(() -> itemHandler).cast();
         }
