@@ -1,4 +1,7 @@
 # Changelog 
+## v1.3.0
+* Auto Rebalance, if there is enoug items to make another item, but they are not spread out in the correct slots, the Factory will split one of the stacks, and move it to an empty slot. At a speed of 1 stack-split per second.
+
 ## v1.2.1
 * Localization for Brazilian Portuguese (pr_br) by Mikeliro
 * Replace SidedInvWrapper, to allow mods to insert and extract from any direction. (curse only)
