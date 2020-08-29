@@ -10,8 +10,6 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.CapabilityItemHandler;
-import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.wrapper.SidedInvWrapper;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.inventory.IRecipeHelperPopulator;
@@ -41,6 +39,7 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
     public static final int resultSlotIndex = 9;
     public static final int outputSlotIndex = 19;
     public final int SIZE = 20;
+    private final FactoryItemHandler itemHandler;
     private NonNullList<ItemStack> content = NonNullList.withSize(SIZE, ItemStack.EMPTY);
     private ICraftingRecipe recipe;
     private int timer;
@@ -49,6 +48,7 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
 
     public FactoryEntity() {
         super(RegistryHandler.FACTORY_ENTITY.get());
+        itemHandler = new FactoryItemHandler(this);
     }
 
     @Override
@@ -59,6 +59,7 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
     @Override
     protected void setItems(NonNullList<ItemStack> newContent) {
         content = newContent;
+        itemHandler.dirty();
     }
 
     @Nonnull
@@ -86,6 +87,7 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
         super.read(compound);
         content = NonNullList.withSize(this.getSizeInventory(), ItemStack.EMPTY);
         ItemStackHelper.loadAllItems(compound, content);
+        itemHandler.dirty();
     }
 
     @Nullable
@@ -112,6 +114,7 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
 
     public void stateEnabled(boolean value) {
         setState(FactoryBlock.enabledProperty, value);
+        itemHandler.dirty();
     }
 
     public void stateLoaded(boolean value) {
@@ -282,32 +285,38 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
     @Override
     public void markDirty() {
         super.markDirty();
-        // TODO Needed?
-        //tellListners(this);
+        itemHandler.dirty();
     }
 
     @Override
     public int[] getSlotsForFace(Direction side) {
-        if (side == Direction.DOWN) {
-            return new int[]{19};
-        }
+        boolean bottom = side == Direction.DOWN;
+        return getSortedInboxSlots(!bottom, bottom);
+    }
+
+    public int[] getSortedInboxSlots(boolean insert, boolean extract) {
         if (!getState(FactoryBlock.enabledProperty)) {
-            return new int[]{0};
+            return extract ? new int[]{outputSlotIndex} : new int[]{};
         }
         Collection<IntPair> list = new TreeSet<IntPair>();
-        for (int index = 10; index < 19; index++) {
-            ItemStack rStack = content.get(index - 10);
-            if (rStack.isEmpty()) {
-                continue;
+        if(insert) {
+            int offset = resultSlotIndex + 1;
+            for (int index = offset; index < outputSlotIndex; index++) {
+                ItemStack rStack = content.get(index - offset);
+                if (rStack.isEmpty()) {
+                    continue;
+                }
+                ItemStack iStack = content.get(index);
+                list.add(new IntPair(index, iStack.getCount()));
             }
-            ItemStack iStack = content.get(index);
-            list.add(new IntPair(index, iStack.getCount()));
+        }
+        if(extract) {
+            list.add(new IntPair(outputSlotIndex, 99));
         }
         return IntPair.aArray(list);
     }
 
-    @Override
-    public boolean canInsertItem(int index, ItemStack stack, @Nullable Direction direction) {
+    public boolean isItemValidForSlot(int index, ItemStack stack) {
         if (index <= resultSlotIndex) {
             return false;
         }
@@ -331,21 +340,19 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
     }
 
     @Override
+    public boolean canInsertItem(int index, ItemStack stack, @Nullable Direction direction) {
+        return isItemValidForSlot(index, stack);
+    }
+
+    @Override
     public boolean canExtractItem(int index, ItemStack stack, Direction direction) {
         return index == outputSlotIndex;
     }
 
-    LazyOptional<? extends IItemHandler>[] handlers = SidedInvWrapper.create(this, Direction.UP, Direction.DOWN, Direction.NORTH);
-
     @Override
     public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction facing) {
-        if (!this.removed && facing != null && capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
-            if (facing == Direction.UP)
-                return handlers[0].cast();
-            else if (facing == Direction.DOWN)
-                return handlers[1].cast();
-            else
-                return handlers[2].cast();
+        if (!this.removed && capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
+            return LazyOptional.of(() -> itemHandler).cast();
         }
         return super.getCapability(capability, facing);
     }
