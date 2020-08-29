@@ -278,32 +278,37 @@ public class FactoryEntity extends LootableContainerBlockEntity implements Recip
     @Override
     public void markDirty() {
         super.markDirty();
-        // TODO Needed?
-        //tellListners(this);
     }
 
     @Override
     public int[] getAvailableSlots(Direction side) {
-        if (side == Direction.DOWN) {
-            return new int[]{19};
-        }
+        boolean bottom = side == Direction.DOWN;
+        return getSortedInboxSlots(!bottom, bottom);
+    }
+
+    public int[] getSortedInboxSlots(boolean insert, boolean extract) {
         if (!getState(FactoryBlock.enabledProperty)) {
-            return new int[]{0};
+            return extract ? new int[]{outputSlotIndex} : new int[]{};
         }
         Collection<IntPair> list = new TreeSet<IntPair>();
-        for (int index = 10; index < 19; index++) {
-            ItemStack rStack = content.get(index - 10);
-            if (rStack.isEmpty()) {
-                continue;
+        if(insert) {
+            int offset = resultSlotIndex + 1;
+            for (int index = offset; index < outputSlotIndex; index++) {
+                ItemStack rStack = content.get(index - offset);
+                if (rStack.isEmpty()) {
+                    continue;
+                }
+                ItemStack iStack = content.get(index);
+                list.add(new IntPair(index, iStack.getCount()));
             }
-            ItemStack iStack = content.get(index);
-            list.add(new IntPair(index, iStack.getCount()));
+        }
+        if(extract) {
+            list.add(new IntPair(outputSlotIndex, 99));
         }
         return IntPair.aArray(list);
     }
 
-    @Override
-    public boolean canInsert(int index, ItemStack stack, @Nullable Direction direction) {
+    public boolean isItemValidForSlot(int index, ItemStack stack) {
         if (index <= resultSlotIndex) {
             return false;
         }
@@ -324,6 +329,11 @@ public class FactoryEntity extends LootableContainerBlockEntity implements Recip
             return true;
         }
         return iStack.getItem() == item;
+    }
+
+    @Override
+    public boolean canInsert(int index, ItemStack stack, @Nullable Direction direction) {
+        return isItemValidForSlot(index, stack);
     }
 
     @Override

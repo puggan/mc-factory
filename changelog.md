@@ -1,6 +1,10 @@
 # Changelog 
+## v1.2.1
+* Localization for Brazilian Portuguese (pr_br) by Mikeliro
+* Replace SidedInvWrapper, to allow mods to insert and extract from any direction. (curse only)
+
 ## v1.2.0
-* use SidedInvWrapper to make it work together with other mods.
+* use SidedInvWrapper to make it work together with other mods. (curse only)
  Versions 1.1.1 only had support for ISidedInventory-handling,
  but some mods only have support the ITEM_HANDLER_CAPABILITY way.
 
