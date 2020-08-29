@@ -1,4 +1,10 @@
 # Changelog 
+## v1.3.0
+* Auto Rebalance, if there are enough items to make another item, but they are not spread out in the correct slots, the Factory will split one of the stacks, and move it to an empty slot. At a speed of 1 stack-split per second.
+* Bugfix, hoppers can now load materials in any slot, the sorting of input slots counted all empty slot as equal, and removed the duplicates.
+* Bugfix, shift-clicking to fill the recipe, now correctly updates the current recipe.
+* Bugfix, shift-clicking to fill the recipe, now put 1 item in each slot, and not more then one item in each slot. (Fabric only bug)
+
 ## v1.2.1
 * Localization for Brazilian Portuguese (pr_br) by Mikeliro
 * Replace SidedInvWrapper, to allow mods to insert and extract from any direction. (curse only)
