@@ -1,4 +1,7 @@
 # Changelog 
+## v1.3.1
+* Bugfix, when trying to insert more items then the stack allowed, the split mixed up the instered and the leftover counts. (Forge only)
+
 ## v1.3.0
 * Auto Rebalance, if there are enough items to make another item, but they are not spread out in the correct slots, the Factory will split one of the stacks, and move it to an empty slot. At a speed of 1 stack-split per second.
 * Bugfix, hoppers can now load materials in any slot, the sorting of input slots counted all empty slot as equal, and removed the duplicates.
@@ -7,10 +10,10 @@
 
 ## v1.2.1
 * Localization for Brazilian Portuguese (pr_br) by Mikeliro
-* Replace SidedInvWrapper, to allow mods to insert and extract from any direction. (curse only)
+* Replace SidedInvWrapper, to allow mods to insert and extract from any direction. (Forge only)
 
 ## v1.2.0
-* use SidedInvWrapper to make it work together with other mods. (curse only)
+* use SidedInvWrapper to make it work together with other mods. (Forge only)
  Versions 1.1.1 only had support for ISidedInventory-handling,
  but some mods only have support the ITEM_HANDLER_CAPABILITY way.
 
