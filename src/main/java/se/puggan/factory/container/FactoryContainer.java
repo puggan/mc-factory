@@ -412,7 +412,39 @@ public class FactoryContainer extends AbstractRecipeScreenHandler<CraftingInvent
         } else {
             slot.markDirty();
         }
+
+        onContentChanged(fInventory);
+
         return newStack;
+    }
+
+    @Override
+    protected boolean insertItem(ItemStack incomingStack, int startIndex, int endIndex, boolean fromLast) {
+        // Use the default if not trying to fill the recipeSlots.
+        if (startIndex != 0 || endIndex != FactoryEntity.resultSlotIndex || fromLast) {
+            return super.insertItem(incomingStack, startIndex, endIndex, fromLast);
+        }
+
+        Factory.LOGGER.warn("Inserting to the recipe");
+
+        boolean inserted = false;
+
+        for(int index = startIndex; index < endIndex; index++) {
+            Slot indexSlot = this.slots.get(index);
+            ItemStack indexStack = indexSlot.getStack();
+            if (indexStack.isEmpty() && indexSlot.canInsert(incomingStack)) {
+                if (incomingStack.getCount() > 1) {
+                    indexSlot.setStack(incomingStack.split(1));
+                } else {
+                    indexSlot.setStack(incomingStack.split(incomingStack.getCount()));
+                }
+
+                indexSlot.markDirty();
+                inserted = true;
+            }
+        }
+
+        return inserted;
     }
 
     @Override
