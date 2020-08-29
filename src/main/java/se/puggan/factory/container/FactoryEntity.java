@@ -168,7 +168,7 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
             }
             Item recipeItem = recipeStack.getItem();
             ItemStack inputStack = content.get(inputSlotIndex);
-             if(inputStack.getItem() != recipeItem) {
+            if(inputStack.getItem() != recipeItem) {
                  if(!inputStack.isEmpty()) {
                      continue;
                  }

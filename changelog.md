@@ -1,6 +1,7 @@
 # Changelog 
 ## v1.3.0
 * Auto Rebalance, if there is enoug items to make another item, but they are not spread out in the correct slots, the Factory will split one of the stacks, and move it to an empty slot. At a speed of 1 stack-split per second.
+* Bugfix, hoppers can now load materials in any slot, the sorting of input slots counted all empty slot as equal, and removed the duplicates.
 
 ## v1.2.1
 * Localization for Brazilian Portuguese (pr_br) by Mikeliro
