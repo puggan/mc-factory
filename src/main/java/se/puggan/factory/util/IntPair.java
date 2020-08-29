@@ -7,8 +7,8 @@ import java.util.Collection;
  * for exemple useful as `TreSet<IntPair>`
  */
 public class IntPair implements Comparable<IntPair> {
-    private final int a;
-    private final int b;
+    public final int a;
+    public final int b;
 
     public IntPair(int a, int b) {
         this.a = a;

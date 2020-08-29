@@ -2,6 +2,7 @@ package se.puggan.factory.container;
 
 import java.util.Collection;
 import java.util.Optional;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -145,7 +146,91 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
 
         if (valid) {
             valid = doCrafting();
+        } else if (accept) {
+            doRebalance();
         }
+    }
+
+    private void doRebalance() {
+        int fromIndex = 0, toIndex = 0, goalAmount = 0;
+
+        // Make a map of slots and count per item
+        TreeMap<String, TreeSet<IntPair>> map = new TreeMap<>();
+        for (int recipeSlotIndex = 0; recipeSlotIndex < 9; recipeSlotIndex++) {
+            int inputSlotIndex = recipeSlotIndex + 10;
+            int count = 0;
+            ItemStack recipeStack = content.get(recipeSlotIndex);
+            if(recipeStack.isEmpty()) {
+                continue;
+            }
+            Item recipeItem = recipeStack.getItem();
+            ItemStack inputStack = content.get(inputSlotIndex);
+             if(inputStack.getItem() != recipeItem) {
+                 if(!inputStack.isEmpty()) {
+                     continue;
+                 }
+            } else {
+                count = inputStack.getCount();
+            }
+            String recipeItemKey = recipeItem.toString();
+            if(map.containsKey(recipeItemKey)) {
+                map.get(recipeItemKey).add(new IntPair(inputSlotIndex, count));
+            } else {
+                TreeSet<IntPair> list = new TreeSet<>();
+                list.add(new IntPair(inputSlotIndex, count));
+                map.put(recipeItemKey, list);
+            }
+        }
+
+        // Find out what item to move, and make sure we have enough items
+        for(TreeSet<IntPair> list : map.values()) {
+            // Only one slot for this item
+            int slotCount = list.size();
+            if(slotCount < 2) {
+                // The only slot for this item is empty, abort
+                if(list.first().b < 1) {
+                    return;
+                }
+            }
+            // if the first slot in the sorted list is non empty, all slots are none empty, skip
+            if(list.first().b > 0) {
+                continue;
+            }
+            // Count the total count
+            int sum = 0;
+            for(IntPair p : list) {
+                sum += p.b;
+            }
+            // If less items then slots, abort
+            if(sum < slotCount) {
+                return;
+            }
+            if(goalAmount > 0) {
+                continue;
+            }
+            goalAmount = sum / slotCount;
+            toIndex = list.first().a;
+            fromIndex = list.last().a;
+        }
+        if(goalAmount < 1 || fromIndex == toIndex) {
+            return;
+        }
+        if(!content.get(toIndex).isEmpty()) {
+            ItemStack fromStack = content.get(fromIndex);
+            ItemStack toStack = content.get(toIndex);
+            return;
+        }
+        ItemStack fromStack = content.get(fromIndex);
+        int moveCount = fromStack.getCount() - goalAmount;
+        if(moveCount < 0) {
+            return;
+        }
+        if(moveCount > goalAmount) {
+            moveCount = goalAmount;
+        }
+
+        ItemStack toStack = fromStack.split(moveCount);
+        setInventorySlotContents(toIndex, toStack);
     }
 
     private boolean validateCrafting() {
