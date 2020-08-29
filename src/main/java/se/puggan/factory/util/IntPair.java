@@ -17,7 +17,7 @@ public class IntPair implements Comparable<IntPair> {
 
     @Override
     public int compareTo(IntPair other) {
-        return b - other.b;
+        return b == other.b ? a - other.a : b - other.b;
     }
 
     public static int[] aArray(Collection<IntPair> list) {

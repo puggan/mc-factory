@@ -160,7 +160,7 @@ public class FactoryEntity extends LootableContainerBlockEntity implements Recip
             }
             Item recipeItem = recipeStack.getItem();
             ItemStack inputStack = content.get(inputSlotIndex);
-             if(inputStack.getItem() != recipeItem) {
+            if(inputStack.getItem() != recipeItem) {
                  if(!inputStack.isEmpty()) {
                      continue;
                  }
