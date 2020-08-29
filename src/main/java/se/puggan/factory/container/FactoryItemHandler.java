@@ -57,29 +57,29 @@ public class FactoryItemHandler implements IItemHandlerModifiable {
 
     @Nonnull
     @Override
-    public ItemStack insertItem(int slot, @Nonnull ItemStack stack, boolean simulate) {
-        if(stack.isEmpty() || !isItemValid(slot, stack)) {
-            return stack;
+    public ItemStack insertItem(int slotIndex, @Nonnull ItemStack inputStack, boolean simulate) {
+        if(inputStack.isEmpty() || !isItemValid(slotIndex, inputStack)) {
+            return inputStack;
         }
-        int realSlot = availableSlots[slot];
+        int realSlot = availableSlots[slotIndex];
         ItemStack stackInSlot = entity.getStackInSlot(realSlot);
         int maxStackSize = stackInSlot.getMaxStackSize();
         int oldCount = stackInSlot.getCount();
         int maxInsertedCount = maxStackSize - oldCount;
         if (maxInsertedCount < 1) {
-            return stack;
+            return inputStack;
         }
-        int suggestedCount = stack.getCount();
-        ItemStack copy = stack.copy();
+        int suggestedCount = inputStack.getCount();
+        ItemStack inputCopy = inputStack.copy();
         ItemStack leftOvers = ItemStack.EMPTY;
         if (maxInsertedCount <= suggestedCount) {
-            leftOvers = copy.split(maxInsertedCount);
+            leftOvers = inputCopy.split(suggestedCount - maxInsertedCount);
         }
         if (!simulate) {
             if(oldCount > 0) {
-                copy.grow(oldCount);
+                inputCopy.grow(oldCount);
             }
-            entity.setInventorySlotContents(realSlot, copy);
+            entity.setInventorySlotContents(realSlot, inputCopy);
             entity.markDirty();
         }
         return leftOvers;
