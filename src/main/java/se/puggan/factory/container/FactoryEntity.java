@@ -13,22 +13,22 @@ import net.minecraft.inventory.Inventories;
 import net.minecraft.inventory.SidedInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.recipe.CraftingRecipe;
 import net.minecraft.recipe.Recipe;
-import net.minecraft.recipe.RecipeFinder;
 import net.minecraft.recipe.RecipeInputProvider;
+import net.minecraft.recipe.RecipeMatcher;
 import net.minecraft.recipe.RecipeType;
 import net.minecraft.recipe.RecipeUnlocker;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.state.property.BooleanProperty;
 import net.minecraft.text.TranslatableText;
-import net.minecraft.util.Tickable;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.world.World;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import se.puggan.factory.Factory;
@@ -36,7 +36,7 @@ import se.puggan.factory.blocks.FactoryBlock;
 import se.puggan.factory.util.IntPair;
 
 // implements ISidedInventory
-public class FactoryEntity extends LootableContainerBlockEntity implements RecipeUnlocker, RecipeInputProvider, SidedInventory, ExtendedScreenHandlerFactory, Tickable {
+public class FactoryEntity extends LootableContainerBlockEntity implements RecipeUnlocker, RecipeInputProvider, SidedInventory, ExtendedScreenHandlerFactory {
     public static final int resultSlotIndex = 9;
     public static final int outputSlotIndex = 19;
     public final int SIZE = 20;
@@ -46,8 +46,8 @@ public class FactoryEntity extends LootableContainerBlockEntity implements Recip
     private boolean valid;
     private boolean accept;
 
-    public FactoryEntity() {
-        super(Factory.blockEntityType);
+    public FactoryEntity(BlockPos pos, BlockState state) {
+        super(Factory.blockEntityType, pos, state);
     }
 
     @NotNull
@@ -76,17 +76,17 @@ public class FactoryEntity extends LootableContainerBlockEntity implements Recip
 
     @NotNull
     @Override
-    public CompoundTag toTag(CompoundTag compound) {
-        super.toTag(compound);
-        Inventories.toTag(compound, content);
+    public NbtCompound writeNbt(NbtCompound compound) {
+        super.writeNbt(compound);
+        Inventories.writeNbt(compound, content);
         return compound;
     }
 
     @Override
-    public void fromTag(BlockState state, CompoundTag compound) {
-        super.fromTag(state, compound);
+    public void readNbt(NbtCompound compound) {
+        super.readNbt(compound);
         content = DefaultedList.ofSize(this.size(), ItemStack.EMPTY);
-        Inventories.fromTag(compound, content);
+        Inventories.readNbt(compound, content);
     }
 
     public boolean getState(BooleanProperty bp) {
@@ -123,7 +123,10 @@ public class FactoryEntity extends LootableContainerBlockEntity implements Recip
         return SIZE;
     }
 
-    @Override
+    public static void serverTick(World world, BlockPos pos, BlockState state, FactoryEntity blockEntity) {
+        blockEntity.tick();
+    }
+
     public void tick() {
         if (world == null || world.isClient) {
             return;
@@ -356,9 +359,9 @@ public class FactoryEntity extends LootableContainerBlockEntity implements Recip
     }
 
     @Override
-    public void provideRecipeInputs(RecipeFinder finder) {
+    public void provideRecipeInputs(RecipeMatcher finder) {
         for (int i = 0; i < 9; i++) {
-            finder.addNormalItem(content.get(i));
+            finder.addInput(content.get(i));
         }
     }
 
@@ -433,8 +436,10 @@ public class FactoryEntity extends LootableContainerBlockEntity implements Recip
     public void writeScreenOpeningData(ServerPlayerEntity serverPlayerEntity, PacketByteBuf packetByteBuf) {
         if (pos == null || pos.compareTo(BlockPos.ZERO) == 0) {
             world = serverPlayerEntity.world;
-            pos = FactoryBlock.lastBlockPosition;
+            //pos = FactoryBlock.lastBlockPosition;
+            packetByteBuf.writeBlockPos(FactoryBlock.lastBlockPosition);
+        } else {
+            packetByteBuf.writeBlockPos(pos);
         }
-        packetByteBuf.writeBlockPos(pos);
     }
 }

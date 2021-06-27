@@ -13,7 +13,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.recipe.CraftingRecipe;
 import net.minecraft.recipe.Recipe;
-import net.minecraft.recipe.RecipeFinder;
+import net.minecraft.recipe.RecipeMatcher;
 import net.minecraft.recipe.book.RecipeBookCategory;
 import net.minecraft.screen.AbstractRecipeScreenHandler;
 import net.minecraft.screen.slot.Slot;
@@ -70,9 +70,12 @@ public class FactoryContainer extends AbstractRecipeScreenHandler<CraftingInvent
         lockInput();
         onContentChanged(fInventory);
     }
+    public FactoryContainer(int windowId, BlockPos pos, PlayerInventory playerInventory) {
+        this(windowId, pos, playerInventory, new FactoryEntity(pos, Factory.factoryBlock.getDefaultState()));
+    }
 
     public FactoryContainer(int windowId, PlayerInventory playerInventory, PacketByteBuf extraData) {
-        this(windowId, extraData.readBlockPos(), playerInventory, new FactoryEntity());
+        this(windowId, extraData.readBlockPos(), playerInventory);
     }
 
     private void slotInventory() {
@@ -127,10 +130,10 @@ public class FactoryContainer extends AbstractRecipeScreenHandler<CraftingInvent
     }
 
     @Override
-    public void populateRecipeFinder(RecipeFinder finder) {
+    public void populateRecipeFinder(RecipeMatcher finder) {
         for (int index = 0; index < FactoryEntity.resultSlotIndex; ++index) {
             ItemStack itemstack = fInventory.getStack(index);
-            finder.addNormalItem(itemstack);
+            finder.addInput(itemstack);
         }
     }
 
@@ -185,6 +188,11 @@ public class FactoryContainer extends AbstractRecipeScreenHandler<CraftingInvent
     @Override
     public RecipeBookCategory getCategory() {
         return RecipeBookCategory.CRAFTING;
+    }
+
+    @Override
+    public boolean canInsertIntoSlot(int index) {
+        return slots.get(index).canTakeItems(pInventory.player);
     }
 
     public void lockInput() {
@@ -274,7 +282,7 @@ public class FactoryContainer extends AbstractRecipeScreenHandler<CraftingInvent
                 if (slot instanceof ItemSlot) {
                     ItemStack stack = slot.getStack();
                     if (!stack.isEmpty()) {
-                        pInventory.offerOrDrop(pInventory.player.world, stack);
+                        pInventory.offerOrDrop(stack);
                     }
                     ((ItemSlot) slot).enabled = false;
                 }
@@ -448,12 +456,11 @@ public class FactoryContainer extends AbstractRecipeScreenHandler<CraftingInvent
     }
 
     @Override
-    public ItemStack onSlotClick(int slotId, int dragType, SlotActionType clickType, PlayerEntity player) {
-        ItemStack itemStack = super.onSlotClick(slotId, dragType, clickType, player);
+    public void onSlotClick(int slotId, int dragType, SlotActionType clickType, PlayerEntity player) {
+        super.onSlotClick(slotId, dragType, clickType, player);
         if (slotId < FactoryEntity.resultSlotIndex) {
             onContentChanged(fInventory);
         }
-        return itemStack;
     }
 
     @Environment(EnvType.CLIENT)

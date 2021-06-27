@@ -17,7 +17,7 @@ public class LockedSlot extends Slot {
     }
 
     @Override
-    public boolean doDrawHoveringEffect() {
+    public boolean isEnabled() {
         return enabled;
     }
 

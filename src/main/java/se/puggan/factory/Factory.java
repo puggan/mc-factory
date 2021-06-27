@@ -5,6 +5,7 @@ import net.fabricmc.api.DedicatedServerModInitializer;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.client.screenhandler.v1.ScreenRegistry;
 import net.fabricmc.fabric.api.network.ServerSidePacketRegistry;
+import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.fabricmc.fabric.api.screenhandler.v1.ScreenHandlerRegistry;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.item.BlockItem;
@@ -29,18 +30,19 @@ public class Factory implements ModInitializer, DedicatedServerModInitializer, C
 
     public static ScreenHandlerType<FactoryContainer> containerType;
     public static BlockEntityType<FactoryEntity> blockEntityType;
+    public static FactoryBlock factoryBlock;
 
     public Factory() {
     }
 
     public void onInitialize() {
-        FactoryBlock block = new FactoryBlock();
-        Registry.register(Registry.BLOCK, factory_id, block);
+        factoryBlock = new FactoryBlock();
+        Registry.register(Registry.BLOCK, factory_id, factoryBlock);
 
         Item.Settings itemSetting = new Item.Settings().group(ItemGroup.REDSTONE);
-        Registry.register(Registry.ITEM, factory_id, new BlockItem(block, itemSetting));
+        Registry.register(Registry.ITEM, factory_id, new BlockItem(factoryBlock, itemSetting));
 
-        blockEntityType = Registry.register(Registry.BLOCK_ENTITY_TYPE, factory_id, BlockEntityType.Builder.create(FactoryEntity::new, block).build(null));
+        blockEntityType = Registry.register(Registry.BLOCK_ENTITY_TYPE, factory_id, FabricBlockEntityTypeBuilder.create(FactoryEntity::new, factoryBlock).build(null));
 
         containerType = ScreenHandlerRegistry.registerExtended(factory_id, FactoryContainer::new);
 

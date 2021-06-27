@@ -5,21 +5,22 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import java.util.List;
 import java.util.Stack;
 import net.minecraft.client.gui.DrawableHelper;
-import net.minecraft.client.gui.screen.TickableElement;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.screen.recipebook.RecipeBookWidget;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TexturedButtonWidget;
+import net.minecraft.client.util.ClientPlayerTickable;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.Matrix4f;
 import se.puggan.factory.container.slot.ItemSlot;
 import se.puggan.factory.container.slot.ReceiptSlot;
 
-public class FactoryScreen extends HandledScreen<FactoryContainer> implements TickableElement {
+public class FactoryScreen extends HandledScreen<FactoryContainer> implements ClientPlayerTickable {
     /**
      * name: x, y, w, h.
      * background: 0, 0, 176, 166
@@ -51,10 +52,9 @@ public class FactoryScreen extends HandledScreen<FactoryContainer> implements Ti
     }
 
     public void recipeToggle(ButtonWidget button) {
-        recipeBookGui.reset(false);
+        recipeBookGui.reset();
         recipeBookGui.toggleOpen();
-        //guiLeft = recipeBookGui.updateScreenPosition(false, width, xSize); #MCP
-        x = recipeBookGui.findLeftEdge(false, width, backgroundWidth);
+        x = recipeBookGui.findLeftEdge(width, backgroundWidth);
         rePositionButtons();
     }
 
@@ -83,14 +83,15 @@ public class FactoryScreen extends HandledScreen<FactoryContainer> implements Ti
                 fContainer::activate,
                 fContainer::deactivate
         );
-        addButton(enabledButton);
+
+        addSelectableChild(enabledButton);
 
         if (client == null) {
             throw new RuntimeException("Minecraft is null");
         }
 
         recipeBookGui.initialize(width, height, client, false, fContainer);
-        children.add(recipeBookGui);
+        addSelectableChild(recipeBookGui);
         setFocused(recipeBookGui);
         recipeButton = new TexturedButtonWidget(
                 rButtonX,
@@ -103,7 +104,7 @@ public class FactoryScreen extends HandledScreen<FactoryContainer> implements Ti
                 RECIPE_BUTTON_TEXTURE,
                 this::recipeToggle
         );
-        addButton(recipeButton);
+        addSelectableChild(recipeButton);
         rePositionButtons();
     }
 
@@ -130,8 +131,8 @@ public class FactoryScreen extends HandledScreen<FactoryContainer> implements Ti
                 }
                 ItemStack fakeStack = new ItemStack(iSlot.lockedItem, 1);
                 if (!ghostItems) {
-                    RenderSystem.pushMatrix();
-                    RenderSystem.translatef(this.x, this.y, 0.0F);
+                    RenderSystem.backupProjectionMatrix();
+                    RenderSystem.setProjectionMatrix(Matrix4f.translate(this.x, this.y, 0.0F));
                     ghostItems = true;
                 }
                 RenderSystem.depthFunc(515);
@@ -147,7 +148,7 @@ public class FactoryScreen extends HandledScreen<FactoryContainer> implements Ti
         }
         if (ghostItems) {
             RenderSystem.depthFunc(515);
-            RenderSystem.popMatrix();
+            RenderSystem.restoreProjectionMatrix();
         }
 
         recipeBookGui.drawGhostSlots(p_230450_1_, x, y, true, partialTicks);
@@ -159,7 +160,10 @@ public class FactoryScreen extends HandledScreen<FactoryContainer> implements Ti
 
     @Override
     protected void drawBackground(MatrixStack p_230450_1_, float partialTicks, int mouseX, int mouseY) {
-        GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        //GlStateManager._colorMask(1.0F, 1.0F, 1.0F, 1.0F);
+        GlStateManager._clearColor(1.0F, 1.0F, 1.0F, 1.0F);
+        // GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+
         client.getTextureManager().bindTexture(GUI_MAP);
 
         drawTexture(p_230450_1_, x, y, 0, 0, 0, backgroundWidth, backgroundHeight, 256, 256);
@@ -187,8 +191,8 @@ public class FactoryScreen extends HandledScreen<FactoryContainer> implements Ti
                 normalSlots.add(handler.slots.get(slotIndex));
             }
         }
-        RenderSystem.pushMatrix();
-        RenderSystem.translatef(x - 1, y - 1, 0.0F);
+        RenderSystem.backupProjectionMatrix();
+        RenderSystem.setProjectionMatrix(Matrix4f.translate(x - 1, y - 1, 0.0F));
 
         client.getTextureManager().bindTexture(GUI_MAP);
         for (Slot slot : disabledSlots) {
@@ -199,6 +203,6 @@ public class FactoryScreen extends HandledScreen<FactoryContainer> implements Ti
             // slot on: 152, 83, 18, 18
             drawTexture(p_230450_1_, slot.x, slot.y, 152, 83, 18, 18);
         }
-        RenderSystem.popMatrix();
+        RenderSystem.restoreProjectionMatrix();
     }
 }

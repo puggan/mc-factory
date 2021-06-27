@@ -32,7 +32,7 @@ public class ReceiptSlot extends Slot {
     }
 
     @Override
-    public boolean doDrawHoveringEffect() {
+    public boolean isEnabled() {
         return !locked || hasStack();
     }
 

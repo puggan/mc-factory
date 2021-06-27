@@ -7,6 +7,8 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.BlockWithEntity;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.block.entity.BlockEntityTicker;
+import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.state.StateManager;
@@ -18,8 +20,8 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.ItemScatterer;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
 import se.puggan.factory.Factory;
 import se.puggan.factory.container.FactoryEntity;
 
@@ -117,12 +119,19 @@ public class FactoryBlock extends BlockWithEntity {
         return BlockRenderType.MODEL;
     }
 
+    @Nullable
     @Override
-    public BlockEntity createBlockEntity(BlockView world) {
-        FactoryEntity entity = new FactoryEntity();
+    public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
+        FactoryEntity entity = new FactoryEntity(pos, state);
         if(lastBlockPosition != null) {
-            entity.setLocation(lastWorld, lastBlockPosition);
+            entity.setWorld(lastWorld);
+            //entity.setLocation(lastWorld, lastBlockPosition);
         }
         return entity;
+    }
+
+    @Nullable
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(World world, BlockState state, BlockEntityType<T> type) {
+        return checkType(type, Factory.blockEntityType, world.isClient ? null : FactoryEntity::serverTick);
     }
 }
