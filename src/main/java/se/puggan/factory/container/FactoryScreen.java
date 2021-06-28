@@ -193,6 +193,10 @@ public class FactoryScreen extends ContainerScreen<FactoryContainer> {
         }
         RenderSystem.pushMatrix();
         RenderSystem.translatef(guiLeft - 1, guiTop - 1, 0.0F);
+
+        if (minecraft == null) {
+            return;
+        }
         minecraft.getTextureManager().bindTexture(GUI_MAP);
         for (Slot slot : disabledSlots) {
             // slot off: 151, 16, 18, 18

@@ -30,7 +30,7 @@ import se.puggan.factory.network.StateEnabledMessage;
 import se.puggan.factory.util.RegistryHandler;
 
 public class FactoryContainer extends RecipeBookContainer<CraftingInventory> {
-    private List<FactoryScreen> screens;
+    private final List<FactoryScreen> screens;
     private boolean enabled;
     private final PlayerInventory pInventory;
     public FactoryEntity fInventory;
