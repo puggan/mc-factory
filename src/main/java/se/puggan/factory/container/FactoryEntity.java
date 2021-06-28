@@ -88,10 +88,8 @@ public class FactoryEntity extends LockableLootTileEntity implements ITickableTi
     }
 
     @Override
-    //public void read(CompoundNBT compound) { #MCP
-    public void func_230337_a_(@Nonnull BlockState p_230337_1_, @Nonnull CompoundNBT compound) {
-        //super.read(compound); #MCP
-        super.func_230337_a_(p_230337_1_, compound);
+    public void read(@Nonnull BlockState p_230337_1_, @Nonnull CompoundNBT compound) {
+        super.read(p_230337_1_, compound);
         content = NonNullList.withSize(this.getSizeInventory(), ItemStack.EMPTY);
         ItemStackHelper.loadAllItems(compound, content);
         itemHandler.dirty();

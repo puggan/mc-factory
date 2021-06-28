@@ -14,7 +14,7 @@ import se.puggan.factory.Factory;
 
 public class StateEnabledMessage extends NetworkMessage {
     private BlockPos pos;
-    private boolean enabled;
+    private final boolean enabled;
 
     public StateEnabledMessage(BlockPos pos, boolean enabled) {
         this.pos = pos;
@@ -58,8 +58,7 @@ public class StateEnabledMessage extends NetworkMessage {
         }
 
         BlockState bs = world.getBlockState(pos);
-        // if (!bs.has(FactoryBlock.enabledProperty)) { #MCP
-        if (!bs.func_235901_b_(FactoryBlock.enabledProperty)) {
+        if (!bs.hasProperty(FactoryBlock.enabledProperty)) {
             Factory.LOGGER.error("StateEnabledMessage.handle() bad BS at " + pos.toString());
         }
 
