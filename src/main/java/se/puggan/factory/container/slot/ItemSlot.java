@@ -19,7 +19,7 @@ public class ItemSlot extends Slot {
     }
 
     @Override
-    public boolean isEnabled() {
+    public boolean doDrawHoveringEffect() {
         return enabled;
     }
 
