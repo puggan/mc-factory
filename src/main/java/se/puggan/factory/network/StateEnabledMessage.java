@@ -14,7 +14,7 @@ import se.puggan.factory.Factory;
 
 public class StateEnabledMessage extends NetworkMessage {
     private BlockPos pos;
-    private boolean enabled;
+    private final boolean enabled;
 
     public StateEnabledMessage(BlockPos pos, boolean enabled) {
         this.pos = pos;

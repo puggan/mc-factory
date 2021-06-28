@@ -20,14 +20,10 @@ public class Factory {
     public Factory() {
         // Register the setup method for modloading
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
-        modEventBus.addListener(this::setup);
         modEventBus.addListener(this::setupClient);
         modEventBus.addListener(this::setupServer);
 
         RegistryHandler.init();
-    }
-
-    private void setup(final FMLCommonSetupEvent event) {
     }
 
     private void setupClient(final FMLClientSetupEvent event) {

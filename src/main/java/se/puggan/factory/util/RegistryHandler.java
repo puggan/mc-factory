@@ -60,9 +60,6 @@ public class RegistryHandler {
 
     public static final RegistryObject<ContainerType<FactoryContainer>> FACTORY_CONTAINER = CONTAINERS.register(
             "factory",
-            () -> {
-                ContainerType<FactoryContainer> containerType = IForgeContainerType.create(FactoryContainer::new);
-                return containerType;
-            }
+            () -> IForgeContainerType.create(FactoryContainer::new)
     );
 }
