@@ -13,7 +13,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.recipe.CraftingRecipe;
 import net.minecraft.recipe.Recipe;
-import net.minecraft.recipe.RecipeFinder;
+import net.minecraft.recipe.RecipeMatcher;
 import net.minecraft.recipe.book.RecipeBookCategory;
 import net.minecraft.screen.AbstractRecipeScreenHandler;
 import net.minecraft.screen.slot.Slot;
@@ -31,13 +31,13 @@ import se.puggan.factory.container.slot.ReceiptSlot;
 import se.puggan.factory.network.StateEnabledMessage;
 
 public class FactoryContainer extends AbstractRecipeScreenHandler<CraftingInventory> {
-    private List<FactoryScreen> screens;
+    private final List<FactoryScreen> screens;
     private boolean enabled;
     private final PlayerInventory pInventory;
     public FactoryEntity fInventory;
     private boolean loading;
     private final boolean clientSide;
-    private BlockPos clientPos;
+    private final BlockPos clientPos;
 
     public FactoryContainer(int windowId, PlayerInventory playerInventory, Inventory inventory) {
         this(windowId, null, playerInventory, inventory);
@@ -127,10 +127,10 @@ public class FactoryContainer extends AbstractRecipeScreenHandler<CraftingInvent
     }
 
     @Override
-    public void populateRecipeFinder(RecipeFinder finder) {
+    public void populateRecipeFinder(RecipeMatcher finder) {
         for (int index = 0; index < FactoryEntity.resultSlotIndex; ++index) {
             ItemStack itemstack = fInventory.getStack(index);
-            finder.addNormalItem(itemstack);
+            finder.addInput(itemstack);
         }
     }
 
@@ -168,19 +168,6 @@ public class FactoryContainer extends AbstractRecipeScreenHandler<CraftingInvent
     public int getCraftingSlotCount() {
         return 10;
     }
-
-    /*
-    @Override
-    public List<RecipeBookGroup> getRecipeBookCategories() {
-        return Lists.newArrayList(
-                RecipeBookGroup.CRAFTING_SEARCH,
-                RecipeBookGroup.CRAFTING_EQUIPMENT,
-                RecipeBookGroup.CRAFTING_BUILDING_BLOCKS,
-                RecipeBookGroup.CRAFTING_MISC,
-                RecipeBookGroup.CRAFTING_REDSTONE
-        );
-    }
-    */
 
     @Override
     public RecipeBookCategory getCategory() {

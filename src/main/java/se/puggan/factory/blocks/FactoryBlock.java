@@ -71,9 +71,6 @@ public class FactoryBlock extends BlockWithEntity {
 
         player.openHandledScreen(entity);
 
-        //NamedScreenHandlerFactory container = state.createScreenHandlerFactory(world, pos);
-        //player.openHandledScreen(container);
-
         return ActionResult.SUCCESS;
     }
 
@@ -94,17 +91,6 @@ public class FactoryBlock extends BlockWithEntity {
             super.onStateReplaced(state, worldIn, pos, newState, isMoving);
         }
     }
-
-    /*
-    @Override
-    public void scheduledTick(BlockState state, ServerWorld worldIn, BlockPos pos, Random rand) {
-        BlockEntity tileentity = worldIn.getBlockEntity(pos);
-        if (tileentity instanceof FactoryEntity) {
-            //((FactoryEntity) tileentity).tick();
-            ((FactoryEntity) tileentity).tick2();
-        }
-    }
-    */
 
     @Override
     protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {

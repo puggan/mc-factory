@@ -160,6 +160,9 @@ public class FactoryScreen extends HandledScreen<FactoryContainer> implements Ti
     @Override
     protected void drawBackground(MatrixStack p_230450_1_, float partialTicks, int mouseX, int mouseY) {
         GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        if (client == null) {
+            return;
+        }
         client.getTextureManager().bindTexture(GUI_MAP);
 
         drawTexture(p_230450_1_, x, y, 0, 0, 0, backgroundWidth, backgroundHeight, 256, 256);
@@ -190,6 +193,9 @@ public class FactoryScreen extends HandledScreen<FactoryContainer> implements Ti
         RenderSystem.pushMatrix();
         RenderSystem.translatef(x - 1, y - 1, 0.0F);
 
+        if (client == null) {
+            return;
+        }
         client.getTextureManager().bindTexture(GUI_MAP);
         for (Slot slot : disabledSlots) {
             // slot off: 151, 16, 18, 18

@@ -24,8 +24,8 @@ import se.puggan.factory.network.StateEnabledMessage;
 public class Factory implements ModInitializer, DedicatedServerModInitializer, ClientModInitializer {
     // Directly reference a log4j logger.
     public static final Logger LOGGER = LogManager.getLogger();
-    public static String MOD_ID = "factory";
-    public static Identifier factory_id = new Identifier(MOD_ID, MOD_ID);
+    public static final String MOD_ID = "factory";
+    public static final Identifier factory_id = new Identifier(MOD_ID, MOD_ID);
 
     public static ScreenHandlerType<FactoryContainer> containerType;
     public static BlockEntityType<FactoryEntity> blockEntityType;

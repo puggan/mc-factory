@@ -13,11 +13,11 @@ import net.minecraft.inventory.Inventories;
 import net.minecraft.inventory.SidedInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.recipe.CraftingRecipe;
 import net.minecraft.recipe.Recipe;
-import net.minecraft.recipe.RecipeFinder;
+import net.minecraft.recipe.RecipeMatcher;
 import net.minecraft.recipe.RecipeInputProvider;
 import net.minecraft.recipe.RecipeType;
 import net.minecraft.recipe.RecipeUnlocker;
@@ -76,17 +76,18 @@ public class FactoryEntity extends LootableContainerBlockEntity implements Recip
 
     @NotNull
     @Override
-    public CompoundTag toTag(CompoundTag compound) {
-        super.toTag(compound);
-        Inventories.toTag(compound, content);
+    public NbtCompound writeNbt(NbtCompound compound) {
+
+        super.writeNbt(compound);
+        Inventories.writeNbt(compound, content);
         return compound;
     }
 
     @Override
-    public void fromTag(BlockState state, CompoundTag compound) {
+    public void fromTag(BlockState state, NbtCompound compound) {
         super.fromTag(state, compound);
         content = DefaultedList.ofSize(this.size(), ItemStack.EMPTY);
-        Inventories.fromTag(compound, content);
+        Inventories.readNbt(compound, content);
     }
 
     public boolean getState(BooleanProperty bp) {
@@ -356,18 +357,12 @@ public class FactoryEntity extends LootableContainerBlockEntity implements Recip
     }
 
     @Override
-    public void provideRecipeInputs(RecipeFinder finder) {
+    public void provideRecipeInputs(RecipeMatcher finder) {
         for (int i = 0; i < 9; i++) {
-            finder.addNormalItem(content.get(i));
+            finder.addInput(content.get(i));
         }
     }
 
-    @Override
-    public void markDirty() {
-        super.markDirty();
-    }
-
-    @NotNull
     @Override
     public int[] getAvailableSlots(@NotNull Direction side) {
         boolean bottom = side == Direction.DOWN;
