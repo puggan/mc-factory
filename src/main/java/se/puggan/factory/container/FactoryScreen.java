@@ -20,7 +20,7 @@ import net.minecraft.util.math.Matrix4f;
 import se.puggan.factory.container.slot.ItemSlot;
 import se.puggan.factory.container.slot.ReceiptSlot;
 
-public class FactoryScreen extends HandledScreen<FactoryContainer> implements ClientPlayerTickable {
+public class FactoryScreen extends HandledScreen<FactoryContainer> {
     /**
      * name: x, y, w, h.
      * background: 0, 0, 176, 166
@@ -106,6 +106,7 @@ public class FactoryScreen extends HandledScreen<FactoryContainer> implements Cl
         );
 
         addDrawableChild(recipeButton);
+        x = recipeBookGui.findLeftEdge(width, backgroundWidth);
         rePositionButtons();
     }
 
