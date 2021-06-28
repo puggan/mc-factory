@@ -97,17 +97,6 @@ public class FactoryBlock extends BlockWithEntity {
         }
     }
 
-    /*
-    @Override
-    public void scheduledTick(BlockState state, ServerWorld worldIn, BlockPos pos, Random rand) {
-        BlockEntity tileentity = worldIn.getBlockEntity(pos);
-        if (tileentity instanceof FactoryEntity) {
-            //((FactoryEntity) tileentity).tick();
-            ((FactoryEntity) tileentity).tick2();
-        }
-    }
-    */
-
     @Override
     protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
         super.appendProperties(builder);
@@ -125,7 +114,6 @@ public class FactoryBlock extends BlockWithEntity {
         FactoryEntity entity = new FactoryEntity(pos, state);
         if(lastBlockPosition != null) {
             entity.setWorld(lastWorld);
-            //entity.setLocation(lastWorld, lastBlockPosition);
         }
         return entity;
     }

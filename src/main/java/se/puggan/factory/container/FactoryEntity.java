@@ -124,10 +124,10 @@ public class FactoryEntity extends LootableContainerBlockEntity implements Recip
     }
 
     public static void serverTick(World world, BlockPos pos, BlockState state, FactoryEntity blockEntity) {
-        blockEntity.tick();
+        blockEntity._serverTick();
     }
 
-    public void tick() {
+    public void _serverTick() {
         if (world == null || world.isClient) {
             return;
         }

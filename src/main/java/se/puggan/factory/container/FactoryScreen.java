@@ -1,6 +1,5 @@
 package se.puggan.factory.container;
 
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import java.util.List;
 import java.util.Stack;
@@ -9,6 +8,7 @@ import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.screen.recipebook.RecipeBookWidget;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TexturedButtonWidget;
+import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.ClientPlayerTickable;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.player.PlayerInventory;
@@ -84,14 +84,14 @@ public class FactoryScreen extends HandledScreen<FactoryContainer> implements Cl
                 fContainer::deactivate
         );
 
-        addSelectableChild(enabledButton);
+        addDrawableChild(enabledButton);
 
         if (client == null) {
             throw new RuntimeException("Minecraft is null");
         }
 
         recipeBookGui.initialize(width, height, client, false, fContainer);
-        addSelectableChild(recipeBookGui);
+        addDrawableChild(recipeBookGui);
         setFocused(recipeBookGui);
         recipeButton = new TexturedButtonWidget(
                 rButtonX,
@@ -104,7 +104,8 @@ public class FactoryScreen extends HandledScreen<FactoryContainer> implements Cl
                 RECIPE_BUTTON_TEXTURE,
                 this::recipeToggle
         );
-        addSelectableChild(recipeButton);
+
+        addDrawableChild(recipeButton);
         rePositionButtons();
     }
 
@@ -113,10 +114,11 @@ public class FactoryScreen extends HandledScreen<FactoryContainer> implements Cl
         this.recipeBookGui.update();
     }
 
-    public void render(MatrixStack p_230450_1_, int mouseX, int mouseY, float partialTicks) {
-        renderBackground(p_230450_1_);
-        recipeBookGui.render(p_230450_1_, mouseX, mouseY, partialTicks);
-        super.render(p_230450_1_, mouseX, mouseY, partialTicks);
+    public void render(MatrixStack matrices, int mouseX, int mouseY, float partialTicks) {
+        renderBackground(matrices);
+        recipeBookGui.render(matrices, mouseX, mouseY, partialTicks);
+        super.render(matrices, mouseX, mouseY, partialTicks);
+        renderSlotsBackgrounds(matrices);
 
         boolean ghostItems = false;
         for (int slotIndex = FactoryEntity.resultSlotIndex + 1; slotIndex < FactoryEntity.outputSlotIndex; ++slotIndex) {
@@ -143,7 +145,7 @@ public class FactoryScreen extends HandledScreen<FactoryContainer> implements Cl
                 int blue = 0x8b;
                 int green = 0x8b;
                 int color = ((alpha * 0x100 + red) * 0x100 + blue) * 0x100 + green;
-                DrawableHelper.fill(p_230450_1_, slot.x, slot.y, slot.x + 15, slot.y + 15, color);
+                DrawableHelper.fill(matrices, slot.x, slot.y, slot.x + 15, slot.y + 15, color);
             }
         }
         if (ghostItems) {
@@ -151,26 +153,22 @@ public class FactoryScreen extends HandledScreen<FactoryContainer> implements Cl
             RenderSystem.restoreProjectionMatrix();
         }
 
-        recipeBookGui.drawGhostSlots(p_230450_1_, x, y, true, partialTicks);
-        drawMouseoverTooltip(p_230450_1_, mouseX, mouseY);
-        recipeBookGui.drawTooltip(p_230450_1_, x, y, mouseX, mouseY);
+        recipeBookGui.drawGhostSlots(matrices, x, y, true, partialTicks);
+        drawMouseoverTooltip(matrices, mouseX, mouseY);
+        recipeBookGui.drawTooltip(matrices, x, y, mouseX, mouseY);
 
         focusOn(recipeBookGui);
     }
 
     @Override
-    protected void drawBackground(MatrixStack p_230450_1_, float partialTicks, int mouseX, int mouseY) {
-        //GlStateManager._colorMask(1.0F, 1.0F, 1.0F, 1.0F);
-        GlStateManager._clearColor(1.0F, 1.0F, 1.0F, 1.0F);
-        // GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-
-        client.getTextureManager().bindTexture(GUI_MAP);
-
-        drawTexture(p_230450_1_, x, y, 0, 0, 0, backgroundWidth, backgroundHeight, 256, 256);
-        renderSlotsBackgrounds(p_230450_1_);
+    protected void drawBackground(MatrixStack matrices, float partialTicks, int mouseX, int mouseY) {
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.setShaderTexture(0, GUI_MAP);
+        this.drawTexture(matrices, x, y, 0, 0, this.backgroundWidth, this.backgroundHeight);
     }
 
-    private void renderSlotsBackgrounds(MatrixStack p_230450_1_) {
+    private void renderSlotsBackgrounds(MatrixStack matrices) {
         List<Slot> normalSlots = new Stack<>();
         List<Slot> disabledSlots = new Stack<>();
         if (enabled) {
@@ -191,18 +189,17 @@ public class FactoryScreen extends HandledScreen<FactoryContainer> implements Cl
                 normalSlots.add(handler.slots.get(slotIndex));
             }
         }
-        RenderSystem.backupProjectionMatrix();
-        RenderSystem.setProjectionMatrix(Matrix4f.translate(x - 1, y - 1, 0.0F));
 
-        client.getTextureManager().bindTexture(GUI_MAP);
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.setShaderTexture(0, GUI_MAP);
         for (Slot slot : disabledSlots) {
-            // slot off: 151, 16, 18, 18
-            drawTexture(p_230450_1_, slot.x, slot.y, 151, 16, 18, 18);
+            // slot off: 151, 16, 18x18
+            drawTexture(matrices, slot.x + x - 1, slot.y + y - 1, 151, 16, 18, 18);
         }
         for (Slot slot : normalSlots) {
-            // slot on: 152, 83, 18, 18
-            drawTexture(p_230450_1_, slot.x, slot.y, 152, 83, 18, 18);
+            // slot on: 151, 83, 18x18
+            drawTexture(matrices, slot.x + x - 1, slot.y + y - 1, 151, 83, 18, 18);
         }
-        RenderSystem.restoreProjectionMatrix();
     }
 }
