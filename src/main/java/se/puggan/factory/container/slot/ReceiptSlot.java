@@ -1,8 +1,8 @@
 package se.puggan.factory.container.slot;
 
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.screen.slot.Slot;
+import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
 
 /**
@@ -11,29 +11,29 @@ import net.minecraft.item.ItemStack;
 public class ReceiptSlot extends Slot {
     public boolean locked;
 
-    public ReceiptSlot(Inventory inventoryIn, int index, int xPosition, int yPosition, boolean locked) {
+    public ReceiptSlot(IInventory inventoryIn, int index, int xPosition, int yPosition, boolean locked) {
         super(inventoryIn, index, xPosition, yPosition);
         this.locked = locked;
     }
 
     @Override
-    public int getMaxItemCount() {
+    public int getSlotStackLimit() {
         return 1;
     }
 
     @Override
-    public boolean canInsert(ItemStack stack) {
+    public boolean isItemValid(ItemStack stack) {
         return !locked;
     }
 
     @Override
-    public boolean canTakeItems(PlayerEntity playerIn) {
+    public boolean canTakeStack(PlayerEntity playerIn) {
         return !locked;
     }
 
     @Override
-    public boolean doDrawHoveringEffect() {
-        return !locked || hasStack();
+    public boolean isEnabled() {
+        return !locked || getHasStack();
     }
 
 }

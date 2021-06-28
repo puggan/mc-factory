@@ -10,7 +10,7 @@ build:
 	./gradlew build
 
 reset:
-	./gradlew --refresh-dependencies genSources
+	./gradlew --refresh-dependencies buildDependents
 
 run:
 	./gradlew runClient

@@ -1,25 +1,26 @@
 package se.puggan.factory.container;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+
 import java.util.List;
 import java.util.Stack;
-import net.minecraft.client.gui.DrawableHelper;
-import net.minecraft.client.gui.screen.TickableElement;
-import net.minecraft.client.gui.screen.ingame.HandledScreen;
-import net.minecraft.client.gui.screen.recipebook.RecipeBookWidget;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.TexturedButtonWidget;
-import net.minecraft.client.util.math.MatrixStack;
+
+import net.minecraft.client.gui.AbstractGui;
+import net.minecraft.client.gui.recipebook.RecipeBookGui;
+import net.minecraft.client.gui.screen.inventory.ContainerScreen;
+import net.minecraft.client.gui.widget.button.Button;
+import net.minecraft.client.gui.widget.button.ImageButton;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.ITextComponent;
 import se.puggan.factory.container.slot.ItemSlot;
 import se.puggan.factory.container.slot.ReceiptSlot;
 
-public class FactoryScreen extends HandledScreen<FactoryContainer> implements TickableElement {
+public class FactoryScreen extends ContainerScreen<FactoryContainer> {
     /**
      * name: x, y, w, h.
      * background: 0, 0, 176, 166
@@ -30,37 +31,37 @@ public class FactoryScreen extends HandledScreen<FactoryContainer> implements Ti
      * Red button: 198, 0, 20, 18
      * Red pressed button: 198, 19, 20, 18
      */
-    public static final Identifier GUI_MAP = new Identifier("factory:textures/gui/factory_map.png");
-    private static final Identifier RECIPE_BUTTON_TEXTURE = new Identifier("textures/gui/recipe_button.png");
-    private final RecipeBookWidget recipeBookGui = new RecipeBookWidget();
+    public static final ResourceLocation GUI_MAP = new ResourceLocation("factory:textures/gui/factory_map.png");
+    private static final ResourceLocation RECIPE_BUTTON_TEXTURE = new ResourceLocation("textures/gui/recipe_button.png");
+    private final RecipeBookGui recipeBookGui = new RecipeBookGui();
 
     private boolean enabled;
     private final FactoryContainer fContainer;
     private EnabledButton enabledButton;
-    private TexturedButtonWidget recipeButton;
+    private ImageButton recipeButton;
     private final int rButtonX = 150;
     private final int rButtonY = 33;
     private final int eButtonX = 60;
     private final int eButtonY = 33;
 
-    public FactoryScreen(FactoryContainer container, PlayerInventory inv, Text name) {
+    public FactoryScreen(FactoryContainer container, PlayerInventory inv, ITextComponent name) {
         super(container, inv, name);
         fContainer = container;
         fContainer.addScreen(this);
         enabled = fContainer.isEnabled();
     }
 
-    public void recipeToggle(ButtonWidget button) {
-        recipeBookGui.reset(false);
-        recipeBookGui.toggleOpen();
+    public void recipeToggle(Button button) {
+        recipeBookGui.initSearchBar(false);
+        recipeBookGui.toggleVisibility();
         //guiLeft = recipeBookGui.updateScreenPosition(false, width, xSize); #MCP
-        x = recipeBookGui.findLeftEdge(false, width, backgroundWidth);
+        guiLeft = recipeBookGui.updateScreenPosition(false, field_238742_p_, xSize);
         rePositionButtons();
     }
 
     public void rePositionButtons() {
-        recipeButton.setPos(x + rButtonX, y + rButtonY);
-        enabledButton.setPos(x + eButtonX, y + eButtonY);
+        recipeButton.setPosition(guiLeft + rButtonX, guiTop + rButtonY);
+        enabledButton.setPosition(guiLeft + eButtonX, guiTop + eButtonY);
     }
 
     public void enable() {
@@ -74,8 +75,10 @@ public class FactoryScreen extends HandledScreen<FactoryContainer> implements Ti
     }
 
     @Override
-    protected void init() {
-        super.init();
+    //protected void init() { #MCP
+    protected void func_231160_c_() {
+        //super.init(); #MCP
+        super.func_231160_c_();
         enabledButton = new EnabledButton(
                 eButtonX,
                 eButtonY,
@@ -83,16 +86,20 @@ public class FactoryScreen extends HandledScreen<FactoryContainer> implements Ti
                 fContainer::activate,
                 fContainer::deactivate
         );
-        addButton(enabledButton);
+        //addButton(enabledButton); #MCP
+        func_230480_a_(enabledButton);
 
-        if (client == null) {
+        // if (minecraft == null) { #MCP
+        if (field_230706_i_ == null) {
             throw new RuntimeException("Minecraft is null");
         }
 
-        recipeBookGui.initialize(width, height, client, false, fContainer);
-        children.add(recipeBookGui);
-        setFocused(recipeBookGui);
-        recipeButton = new TexturedButtonWidget(
+        //recipeBookGui.init(width, height, minecraft, false, fContainer); #MCP
+        recipeBookGui.init(field_238742_p_, field_238745_s_, field_230706_i_, false, fContainer);
+        //children.add(recipeBookGui); #MCP
+        field_230705_e_.add(recipeBookGui);
+        setFocusedDefault(recipeBookGui);
+        recipeButton = new ImageButton(
                 rButtonX,
                 rButtonY,
                 20,
@@ -103,24 +110,31 @@ public class FactoryScreen extends HandledScreen<FactoryContainer> implements Ti
                 RECIPE_BUTTON_TEXTURE,
                 this::recipeToggle
         );
-        addButton(recipeButton);
+        //addButton(recipeButton); #MCP
+        func_230480_a_(recipeButton);
         rePositionButtons();
     }
 
-    public void tick() {
-        super.tick();
-        this.recipeBookGui.update();
+    //public void tick() { #MCP
+    public void func_231023_e_() {
+        //super.tick(); #MCP
+        super.func_231023_e_();
+        this.recipeBookGui.tick();
     }
 
-    public void render(MatrixStack p_230450_1_, int mouseX, int mouseY, float partialTicks) {
-        renderBackground(p_230450_1_);
-        recipeBookGui.render(p_230450_1_, mouseX, mouseY, partialTicks);
-        super.render(p_230450_1_, mouseX, mouseY, partialTicks);
+    // public void render(int mouseX, int mouseY, float partialTicks) { #MCP
+    public void func_230430_a_(MatrixStack p_230450_1_, int mouseX, int mouseY, float partialTicks) {
+        //renderBackground(); #MCP
+        func_230446_a_(p_230450_1_);
+        // recipeBookGui.render(mouseX, mouseY, partialTicks); #MCP
+        recipeBookGui.func_230430_a_(p_230450_1_, mouseX, mouseY, partialTicks);
+        //super.render(mouseX, mouseY, partialTicks); #MCP
+        super.func_230430_a_(p_230450_1_, mouseX, mouseY, partialTicks);
 
         boolean ghostItems = false;
         for (int slotIndex = FactoryEntity.resultSlotIndex + 1; slotIndex < FactoryEntity.outputSlotIndex; ++slotIndex) {
-            Slot slot = handler.slots.get(slotIndex);
-            if (slot.hasStack()) {
+            Slot slot = container.inventorySlots.get(slotIndex);
+            if (slot.getHasStack()) {
                 continue;
             }
             if (slot instanceof ItemSlot) {
@@ -131,18 +145,20 @@ public class FactoryScreen extends HandledScreen<FactoryContainer> implements Ti
                 ItemStack fakeStack = new ItemStack(iSlot.lockedItem, 1);
                 if (!ghostItems) {
                     RenderSystem.pushMatrix();
-                    RenderSystem.translatef(this.x, this.y, 0.0F);
+                    RenderSystem.translatef(this.guiLeft, this.guiTop, 0.0F);
                     ghostItems = true;
                 }
                 RenderSystem.depthFunc(515);
-                itemRenderer.renderGuiItemIcon(fakeStack, slot.x, slot.y);
+                // itemRenderer.renderItemIntoGUI(fakeStack, slot.xPos, slot.yPos); #MCP
+                field_230707_j_.renderItemIntoGUI(fakeStack, slot.xPos, slot.yPos);
                 RenderSystem.depthFunc(516);
                 int alpha = (int) (0.7 * 0xff);
                 int red = 0x8b;
                 int blue = 0x8b;
                 int green = 0x8b;
                 int color = ((alpha * 0x100 + red) * 0x100 + blue) * 0x100 + green;
-                DrawableHelper.fill(p_230450_1_, slot.x, slot.y, slot.x + 15, slot.y + 15, color);
+                // AbstractGui.fill(p_230450_1_, slot.xPos, slot.yPos, slot.xPos + 15, slot.yPos + 15, color); #MCP
+                AbstractGui.func_238467_a_(p_230450_1_, slot.xPos, slot.yPos, slot.xPos + 15, slot.yPos + 15, color);
             }
         }
         if (ghostItems) {
@@ -150,22 +166,25 @@ public class FactoryScreen extends HandledScreen<FactoryContainer> implements Ti
             RenderSystem.popMatrix();
         }
 
-        recipeBookGui.drawGhostSlots(p_230450_1_, x, y, true, partialTicks);
-        drawMouseoverTooltip(p_230450_1_, mouseX, mouseY);
-        recipeBookGui.drawTooltip(p_230450_1_, x, y, mouseX, mouseY);
+        // recipeBookGui.renderGhostRecipe(guiLeft, guiTop, true, partialTicks); #MCP
+        recipeBookGui.func_230477_a_(p_230450_1_, guiLeft, guiTop, true, partialTicks);
+        // renderHoveredToolTip(mouseX, mouseY); #MCP
+        func_230459_a_(p_230450_1_, mouseX, mouseY);
+        // recipeBookGui.renderTooltip(guiLeft, guiTop, mouseX, mouseY); #MCP
+        recipeBookGui.func_238924_c_(p_230450_1_, guiLeft, guiTop, mouseX, mouseY);
 
-        focusOn(recipeBookGui);
+        func_212932_b(recipeBookGui);
     }
 
     @Override
-    protected void drawBackground(MatrixStack p_230450_1_, float partialTicks, int mouseX, int mouseY) {
+    //protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) { #MCP
+    protected void func_230450_a_(MatrixStack p_230450_1_, float partialTicks, int mouseX, int mouseY) {
         GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-        if (client == null) {
-            return;
-        }
-        client.getTextureManager().bindTexture(GUI_MAP);
+        //minecraft.getTextureManager().bindTexture(GUI_MAP);
+        field_230706_i_.getTextureManager().bindTexture(GUI_MAP);
 
-        drawTexture(p_230450_1_, x, y, 0, 0, 0, backgroundWidth, backgroundHeight, 256, 256);
+        //blit(guiLeft, guiTop, 0, 0, 0, xSize, ySize, 256, 256); #MCP
+        func_238464_a_(p_230450_1_, guiLeft, guiTop, 0, 0, 0, xSize, ySize, 256, 256);
         renderSlotsBackgrounds(p_230450_1_);
     }
 
@@ -174,7 +193,7 @@ public class FactoryScreen extends HandledScreen<FactoryContainer> implements Ti
         List<Slot> disabledSlots = new Stack<>();
         if (enabled) {
             for (int slotIndex = 0; slotIndex <= FactoryEntity.outputSlotIndex; ++slotIndex) {
-                Slot slot = handler.slots.get(slotIndex);
+                Slot slot = container.inventorySlots.get(slotIndex);
                 if (slot instanceof ReceiptSlot) {
                     disabledSlots.add(slot);
                 } else if (slot instanceof ItemSlot) {
@@ -187,23 +206,23 @@ public class FactoryScreen extends HandledScreen<FactoryContainer> implements Ti
             }
         } else {
             for (int slotIndex = 0; slotIndex <= FactoryEntity.resultSlotIndex; ++slotIndex) {
-                normalSlots.add(handler.slots.get(slotIndex));
+                normalSlots.add(container.inventorySlots.get(slotIndex));
             }
         }
         RenderSystem.pushMatrix();
-        RenderSystem.translatef(x - 1, y - 1, 0.0F);
+        RenderSystem.translatef(guiLeft - 1, guiTop - 1, 0.0F);
 
-        if (client == null) {
-            return;
-        }
-        client.getTextureManager().bindTexture(GUI_MAP);
+        //minecraft.getTextureManager().bindTexture(GUI_MAP); #MCP
+        field_230706_i_.getTextureManager().bindTexture(GUI_MAP);
         for (Slot slot : disabledSlots) {
             // slot off: 151, 16, 18, 18
-            drawTexture(p_230450_1_, slot.x, slot.y, 151, 16, 18, 18);
+            // blit(p_230450_1_, slot.xPos, slot.yPos, 151, 16, 18, 18); #MCP
+            func_238474_b_(p_230450_1_, slot.xPos, slot.yPos, 151, 16, 18, 18);
         }
         for (Slot slot : normalSlots) {
             // slot on: 152, 83, 18, 18
-            drawTexture(p_230450_1_, slot.x, slot.y, 152, 83, 18, 18);
+            // blit(p_230450_1_, slot.xPos, slot.yPos, 152, 83, 18, 18); #MCP
+            func_238474_b_(p_230450_1_, slot.xPos, slot.yPos, 152, 83, 18, 18);
         }
         RenderSystem.popMatrix();
     }

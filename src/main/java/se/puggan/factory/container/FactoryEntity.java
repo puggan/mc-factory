@@ -4,90 +4,97 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.LootableContainerBlockEntity;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.items.CapabilityItemHandler;
+import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.CraftingInventory;
-import net.minecraft.inventory.Inventories;
-import net.minecraft.inventory.SidedInventory;
+import net.minecraft.inventory.IRecipeHelperPopulator;
+import net.minecraft.inventory.IRecipeHolder;
+import net.minecraft.inventory.ISidedInventory;
+import net.minecraft.inventory.ItemStackHelper;
+import net.minecraft.item.crafting.ICraftingRecipe;
+import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.item.crafting.IRecipeType;
+import net.minecraft.item.crafting.RecipeItemHelper;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.recipe.CraftingRecipe;
-import net.minecraft.recipe.Recipe;
-import net.minecraft.recipe.RecipeMatcher;
-import net.minecraft.recipe.RecipeInputProvider;
-import net.minecraft.recipe.RecipeType;
-import net.minecraft.recipe.RecipeUnlocker;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.state.property.BooleanProperty;
-import net.minecraft.text.TranslatableText;
-import net.minecraft.util.Tickable;
-import net.minecraft.util.collection.DefaultedList;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import se.puggan.factory.Factory;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.state.BooleanProperty;
+import net.minecraft.tileentity.ITickableTileEntity;
+import net.minecraft.tileentity.LockableLootTileEntity;
+import net.minecraft.util.Direction;
+import net.minecraft.util.NonNullList;
+import net.minecraft.util.text.ITextComponent;
 import se.puggan.factory.blocks.FactoryBlock;
+import se.puggan.factory.Factory;
 import se.puggan.factory.util.IntPair;
+import se.puggan.factory.util.RegistryHandler;
 
 // implements ISidedInventory
-public class FactoryEntity extends LootableContainerBlockEntity implements RecipeUnlocker, RecipeInputProvider, SidedInventory, ExtendedScreenHandlerFactory, Tickable {
+public class FactoryEntity extends LockableLootTileEntity implements ITickableTileEntity, IRecipeHolder, IRecipeHelperPopulator, ISidedInventory {
     public static final int resultSlotIndex = 9;
     public static final int outputSlotIndex = 19;
     public final int SIZE = 20;
-    private DefaultedList<ItemStack> content = DefaultedList.ofSize(SIZE, ItemStack.EMPTY);
-    private CraftingRecipe recipe;
+    private final FactoryItemHandler itemHandler;
+    private NonNullList<ItemStack> content = NonNullList.withSize(SIZE, ItemStack.EMPTY);
+    private ICraftingRecipe recipe;
     private int timer;
     private boolean valid;
     private boolean accept;
 
     public FactoryEntity() {
-        super(Factory.blockEntityType);
+        super(RegistryHandler.FACTORY_ENTITY.get());
+        itemHandler = new FactoryItemHandler(this);
     }
 
-    @NotNull
+    @Nonnull
     @Override
-    protected DefaultedList<ItemStack> getInvStackList() {
+    protected NonNullList<ItemStack> getItems() {
         return content;
     }
 
     @Override
-    protected void setInvStackList(@NotNull DefaultedList<ItemStack> newContent) {
+    protected void setItems(@Nonnull NonNullList<ItemStack> newContent) {
         content = newContent;
+        itemHandler.dirty();
     }
 
+    @Nonnull
     @Override
-    protected TranslatableText getContainerName() {
+    protected ITextComponent getDefaultName() {
         return FactoryBlock.menuTitle;
     }
 
+    @Nonnull
     @Override
-    public ScreenHandler createScreenHandler(
+    public Container createMenu(
             int windowId,
             @Nullable PlayerInventory playerInventory
     ) {
         return new FactoryContainer(windowId, playerInventory, this);
     }
 
-    @NotNull
+    @Nonnull
     @Override
-    public NbtCompound writeNbt(NbtCompound compound) {
-
-        super.writeNbt(compound);
-        Inventories.writeNbt(compound, content);
+    public CompoundNBT write(@Nonnull CompoundNBT compound) {
+        super.write(compound);
+        ItemStackHelper.saveAllItems(compound, content);
         return compound;
     }
 
     @Override
-    public void fromTag(BlockState state, NbtCompound compound) {
-        super.fromTag(state, compound);
-        content = DefaultedList.ofSize(this.size(), ItemStack.EMPTY);
-        Inventories.readNbt(compound, content);
+    //public void read(CompoundNBT compound) { #MCP
+    public void func_230337_a_(@Nonnull BlockState p_230337_1_, @Nonnull CompoundNBT compound) {
+        //super.read(compound); #MCP
+        super.func_230337_a_(p_230337_1_, compound);
+        content = NonNullList.withSize(this.getSizeInventory(), ItemStack.EMPTY);
+        ItemStackHelper.loadAllItems(compound, content);
+        itemHandler.dirty();
     }
 
     public boolean getState(BooleanProperty bp) {
@@ -113,6 +120,7 @@ public class FactoryEntity extends LootableContainerBlockEntity implements Recip
 
     public void stateEnabled(boolean value) {
         setState(FactoryBlock.enabledProperty, value);
+        itemHandler.dirty();
     }
 
     public void stateLoaded(boolean value) {
@@ -120,16 +128,15 @@ public class FactoryEntity extends LootableContainerBlockEntity implements Recip
     }
 
     @Override
-    public int size() {
+    public int getSizeInventory() {
         return SIZE;
     }
 
     @Override
     public void tick() {
-        if (world == null || world.isClient) {
+        if (world == null || world.isRemote) {
             return;
         }
-
         timer++;
         // 1s = 20 ticks = 10 redstone ticks, 8 ticks matches hopper cooldown
         int timerGoal = valid ? 8 : 20;
@@ -224,11 +231,11 @@ public class FactoryEntity extends LootableContainerBlockEntity implements Recip
         }
 
         ItemStack toStack = fromStack.split(moveCount);
-        setStack(toIndex, toStack);
+        setInventorySlotContents(toIndex, toStack);
     }
 
     private boolean validateCrafting() {
-        if (world == null || world.isClient) {
+        if (world == null || world.isRemote) {
             accept = false;
             return false;
         }
@@ -253,7 +260,7 @@ public class FactoryEntity extends LootableContainerBlockEntity implements Recip
 
         CraftingInventory ci = new CraftingInventory(new DummyContainer(), 3, 3);
         for (int i = 0; i < 9; i++) {
-            ci.setStack(i, content.get(i));
+            ci.setInventorySlotContents(i, content.get(i));
         }
 
         if (!recipe.matches(ci, world)) {
@@ -265,106 +272,113 @@ public class FactoryEntity extends LootableContainerBlockEntity implements Recip
         accept = true;
 
         for (int i = 0; i < 9; i++) {
-            ci.setStack(i, content.get(i + 10));
+            ci.setInventorySlotContents(i, content.get(i + 10));
         }
 
         return recipe.matches(ci, world);
     }
 
     private boolean doCrafting() {
-        ItemStack gStack = getStack(9);
+        ItemStack gStack = getStackInSlot(9);
         if (gStack.isEmpty()) {
             return false;
         }
 
         int made = gStack.getCount();
-        ItemStack oStack = getStack(19);
+        ItemStack oStack = getStackInSlot(19);
         if (!oStack.isEmpty()) {
             if (oStack.getItem() != gStack.getItem()) {
                 return false;
             }
-            if (oStack.getMaxCount() < oStack.getCount() + made) {
+            if (oStack.getMaxStackSize() < oStack.getCount() + made) {
                 return false;
             }
         }
 
         for (int i = 0; i < 9; i++) {
-            ItemStack rStack = getStack(i);
+            ItemStack rStack = getStackInSlot(i);
             if (rStack.isEmpty()) {
                 continue;
             }
-            ItemStack iStack = getStack(10 + i);
-            iStack.decrement(1);
+            ItemStack iStack = getStackInSlot(10 + i);
+            iStack.shrink(1);
         }
 
         if (!oStack.isEmpty()) {
-            oStack.increment(made);
+            oStack.grow(made);
         } else {
-            setStack(19, gStack.copy());
+            setInventorySlotContents(19, gStack.copy());
         }
         return true;
     }
 
     @Override
-    public void setLastRecipe(@Nullable Recipe<?> newRecipe) {
-        boolean loaded = newRecipe instanceof CraftingRecipe;
-        recipe = loaded ? (CraftingRecipe) newRecipe : null;
-        if (world == null || world.isClient) {
+    public void setRecipeUsed(@Nullable IRecipe<?> newRecipe) {
+        boolean loaded = newRecipe instanceof ICraftingRecipe;
+        recipe = loaded ? (ICraftingRecipe) newRecipe : null;
+        if (world == null || world.isRemote) {
             return;
         }
         stateLoaded(loaded);
-        setStack(resultSlotIndex, loaded ? newRecipe.getOutput() : ItemStack.EMPTY);
+        setInventorySlotContents(resultSlotIndex, loaded ? newRecipe.getRecipeOutput() : ItemStack.EMPTY);
     }
 
     @Nullable
     @Override
-    public CraftingRecipe getLastRecipe() {
+    public ICraftingRecipe getRecipeUsed() {
         return recipe;
     }
 
     @Nullable
-    public CraftingRecipe calculateRecipe() {
+    public ICraftingRecipe calculateRecipe() {
         if (world == null) {
             return null;
         }
 
         CraftingInventory ci = new CraftingInventory(new DummyContainer(), 3, 3);
         for (int i = 0; i < 9; i++) {
-            ci.setStack(i, content.get(i));
+            ci.setInventorySlotContents(i, content.get(i));
         }
         if (recipe != null && recipe.matches(ci, world)) {
             return recipe;
         }
 
-        if (world.isClient) {
+        if (world.isRemote) {
             return null;
         }
 
-        Optional<CraftingRecipe> optional = world.getRecipeManager().getFirstMatch(RecipeType.CRAFTING, ci, world);
+        Optional<ICraftingRecipe> optional = world.getRecipeManager().getRecipe(IRecipeType.CRAFTING, ci, world);
         if (!optional.isPresent()) {
             if (recipe != null) {
-                setLastRecipe(null);
+                setRecipeUsed(null);
             }
             return null;
         }
 
-        CraftingRecipe newRecipe = optional.get();
+        ICraftingRecipe newRecipe = optional.get();
         if (newRecipe != recipe) {
-            setLastRecipe(newRecipe);
+            setRecipeUsed(newRecipe);
         }
 
         return newRecipe;
     }
 
     @Override
-    public void provideRecipeInputs(RecipeMatcher finder) {
+    public void fillStackedContents(@Nonnull RecipeItemHelper helper) {
         for (int i = 0; i < 9; i++) {
-            finder.addInput(content.get(i));
+            helper.accountPlainStack(content.get(i));
         }
     }
 
     @Override
-    public int[] getAvailableSlots(@NotNull Direction side) {
+    public void markDirty() {
+        super.markDirty();
+        itemHandler.dirty();
+    }
+
+    @Nonnull
+    @Override
+    public int[] getSlotsForFace(@Nonnull Direction side) {
         boolean bottom = side == Direction.DOWN;
         return getSortedInboxSlots(!bottom, bottom);
     }
@@ -391,7 +405,7 @@ public class FactoryEntity extends LootableContainerBlockEntity implements Recip
         return IntPair.aArray(list);
     }
 
-    public boolean isItemValidForSlot(int index, @NotNull ItemStack stack) {
+    public boolean isItemValidForSlot(int index, @Nonnull ItemStack stack) {
         if (index <= resultSlotIndex) {
             return false;
         }
@@ -415,21 +429,20 @@ public class FactoryEntity extends LootableContainerBlockEntity implements Recip
     }
 
     @Override
-    public boolean canInsert(int index, @NotNull ItemStack stack, @Nullable Direction direction) {
+    public boolean canInsertItem(int index, @Nonnull ItemStack stack, @Nullable Direction direction) {
         return isItemValidForSlot(index, stack);
     }
 
     @Override
-    public boolean canExtract(int index, @NotNull ItemStack stack, @NotNull Direction direction) {
+    public boolean canExtractItem(int index, @Nonnull ItemStack stack, @Nonnull Direction direction) {
         return index == outputSlotIndex;
     }
 
     @Override
-    public void writeScreenOpeningData(ServerPlayerEntity serverPlayerEntity, PacketByteBuf packetByteBuf) {
-        if (pos == null || pos.compareTo(BlockPos.ZERO) == 0) {
-            world = serverPlayerEntity.world;
-            pos = FactoryBlock.lastBlockPosition;
+    public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, @Nullable Direction facing) {
+        if (!this.removed && capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
+            return LazyOptional.of(() -> itemHandler).cast();
         }
-        packetByteBuf.writeBlockPos(pos);
+        return super.getCapability(capability, facing);
     }
 }

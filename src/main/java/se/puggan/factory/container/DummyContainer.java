@@ -1,21 +1,21 @@
 package se.puggan.factory.container;
 
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.ScreenHandlerType;
+import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.container.Container;
+import net.minecraft.inventory.container.ContainerType;
 
-public class DummyContainer extends ScreenHandler {
+public class DummyContainer extends Container {
     protected DummyContainer() {
-        super(ScreenHandlerType.CRAFTING, 0);
+        super(ContainerType.CRAFTING, 0);
     }
 
     @Override
-    public boolean canUse(PlayerEntity playerIn) {
+    public boolean canInteractWith(PlayerEntity playerIn) {
         return false;
     }
 
     @Override
-    public void onContentChanged(Inventory inventoryIn) {
+    public void onCraftMatrixChanged(IInventory inventoryIn) {
     }
 }
